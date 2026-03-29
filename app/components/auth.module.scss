@@ -1,185 +1,446 @@
+// ============================================================================
+// AUTH MODULE - Login Page Styling
+// Implementation following ui-ux-pro-max design principles:
+// - Priority 1: Accessibility (contrast 4.5:1, focus indicators, keyboard nav)
+// - Priority 2: Touch & Interaction (44×44px min, 8px spacing)
+// - Priority 8: Forms & Feedback (visible labels, error messaging)
+// ============================================================================
+
+// ============================================================================
+// Color Tokens (WCAG AA Compliant - 4.5:1 contrast minimum)
+// ============================================================================
+$color-primary: #3d76e0;
+$color-primary-dark: #2d5bc8;
+$color-primary-light: #e8f1ff;
+$color-brand-gradient-start: #3d73df;
+$color-brand-gradient-end: #1d228e;
+$color-text-primary: #2d2d34; // 4.5:1 contrast on white
+$color-text-secondary: #666d7d; // 4.5:1 contrast on white
+$color-text-light: #ffffff;
+$color-background-light: #f4f4f6;
+$color-background-white: #ffffff;
+$color-background-form: #fafbfc;
+$color-error: #dc2626; // 4.5:1 contrast on white
+$color-error-light: #fee2e2;
+$color-border: #e5e7eb;
+$color-border-focus: #3d76e0;
+$color-button-disabled: #d1d5db;
+
+// ============================================================================
+// Spacing Scale (8px base unit)
+// ============================================================================
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 48px;
+
+// ============================================================================
+// Typography
+// ============================================================================
+$font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 24px;
+$font-size-2xl: 32px;
+
+$line-height-tight: 1.3;
+$line-height-normal: 1.5;
+
+// ============================================================================
+// Component Dimensions
+// ============================================================================
+$input-height: 56px; // Touch-friendly (>44px minimum)
+$input-radius: 12px;
+$button-height: 56px;
+$button-radius: 12px;
+$focus-ring-width: 2px;
+
+// ============================================================================
+// Responsive Breakpoints
+// ============================================================================
+$breakpoint-sm: 520px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1100px;
+
+// ============================================================================
+// Main Page Container
+// ============================================================================
 .auth-page {
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
+  justify-content: center;
+  min-height: 100vh;
   width: 100%;
-  flex-direction: column;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  
-  .auth-container {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-    padding: 50px;
-    width: 100%;
-    max-width: 450px;
-    text-align: center;
-    animation: slide-in ease 0.5s;
-    position: relative;
-    overflow: hidden;
-  }
+  padding: $space-lg;
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(61, 118, 224, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(29, 34, 142, 0.15), transparent 25%),
+    linear-gradient(135deg, #f4f4f7 0%, #e6effa 100%);
+  font-family: $font-family;
 
-  .auth-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #4f46e5, #8b5cf6, #ec4899);
-  }
-
-  .auth-logo {
-    margin-bottom: 35px;
-    transform: scale(1.3);
-  }
-
-  .auth-title {
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1.4;
-    margin-bottom: 12px;
-    color: #1e293b;
-  }
-
-  .auth-tips {
-    font-size: 16px;
-    color: #64748b;
-    margin-bottom: 35px;
-  }
-
-  .auth-input-group {
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: right; /* 整个模块绝对居中 */
-    
-    label {
-      display: inline-block;
-      width: 60px; /* 锁死文字宽度，刚好装下三个字 */
-      text-align-last: justify; /* 强制“用户名”和“密码”两端完全平齐 */
-      text-align: justify;
-      font-size: 16px;
-      font-weight: 600;
-      color: #1e293b;
-      margin-right: 20px; /* 锁死：这就是文字和输入框之间永远不变的间距 */
-      flex-shrink: 0;
-    }
-
-    /* 核心杀手锏：统一外壳，强制尺寸 */
-    > *:not(label) {
-      width: 260px !important; /* 强制设定相同的死宽度 */
-      flex: none !important; /* 取消了注释：彻底废除底层自带的 flex 干扰 */
-      margin: 0 !important;  /* 取消了注释：防止任何多余外边距干扰 */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
     }
   }
-
-  .auth-actions {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    margin-top: 35px;
-
-    button {
-      width: 100%;
-      height: 52px;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      transition: all 0.3s ease;
-      background: linear-gradient(135deg, #4f46e5, #6366f1);
-      color: white;
-      border: none;
-      
-      &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
-      }
-    }
-
-    button:not(:last-child) {
-      margin-bottom: 12px;
-    }
-  }
-
-  .auth-error {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    padding: 14px;
-    border-radius: 10px;
-    margin: 24px 0;
-    text-align: center;
-    font-size: 14px;
-    animation: fade-in ease 0.3s;
-  }
-
-  .auth-footer {
-    margin-top: 35px;
-    text-align: center;
-    font-size: 14px;
-    color: #94a3b8;
-
-    p {
-      margin: 6px 0;
-    }
-  }
-
-  /* 通用带眼睛输入框容器样式 */
-  .password-input-container {
-    width: 100%; /* 删除了原来的 flex: 1，改用 100% 完全继承父级的 260px */
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  /* 输入框本体样式 */
-  .password-input {
-    width: 100%;
-    padding: 12px 40px 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 16px;
-    box-sizing: border-box; /* 极其重要：确保 padding 不会额外撑大输入框的总体积 */
-    transition: all 0.3s ease;
-    
-    &:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-  }
-
-  /* 眼睛图标样式 */
-  .password-eye {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  /* 专门针对用户名行：暴力隐藏里面的按钮 (眼睛)，保留物理占位 */
-  .hide-eye-group {
-    button {
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-  }
-
 }
 
-@keyframes slide-in {
+// ============================================================================
+// Layout Container (Two-Panel Grid)
+// ============================================================================
+.auth-container {
+  width: min(1200px, 100%);
+  height: auto;
+  max-height: 90vh;
+  min-height: 620px;
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 24px 60px rgba(22, 48, 107, 0.1),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+  @media (max-width: $breakpoint-md) {
+    grid-template-columns: 1fr;
+    width: 100%;
+    min-height: auto;
+    max-height: none;
+    border-radius: 20px;
+  }
+}
+
+// ============================================================================
+// Brand Panel (Left Side)
+// ============================================================================
+.brand-panel {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(40px, 5vw, 64px) clamp(40px, 6vw, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #172554 100%);
+  color: $color-text-light;
+  box-shadow: inset -10px 0 30px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: $breakpoint-md) {
+    min-height: 290px;
+    padding: $space-xl clamp(24px, 5vw, 40px);
+    box-shadow: inset 0 -10px 30px rgba(0, 0, 0, 0.05);
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    padding: $space-lg $space-md;
+  }
+}
+
+.brand-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  width: 100%;
+  text-align: left;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(40px, 6vw, 80px);
+
+  @media (max-width: $breakpoint-md) {
+    max-width: 100%;
+  }
+}
+
+.logo-wrapper {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  width: clamp(100px, 12vw, 160px);
+  max-width: 40%;
+  flex-shrink: 0;
+
+  @media (max-width: $breakpoint-md) {
+    margin-bottom: $space-lg;
+    width: clamp(120px, 18vw, 160px);
+    max-width: 50%;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    width: clamp(100px, 25vw, 140px);
+    max-width: 60%;
+  }
+}
+
+.company-logo {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+  overflow: visible;
+  opacity: 0.95;
+}
+
+.brand-hero {
+  margin-right: auto;
+  width: min(600px, 100%);
+  text-align: left;
+  backdrop-filter: blur(1px);
+}
+
+.brand-kicker {
+  margin: 0 0 16px;
+  color: rgba($color-text-light, 0.85);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    width: 24px;
+    height: 2px;
+    background: rgba(111, 176, 255, 0.8);
+    border-radius: 2px;
+  }
+}
+
+.brand-heading {
+  font-size: clamp(48px, 6vw, 82px);
+  line-height: 1.1;
+  font-weight: 800;
+  margin: 16px 0 0;
+  letter-spacing: 0.04em;
+  color: $color-text-light;
+  text-shadow: 0 8px 40px rgba(111, 176, 255, 0.25);
+
+  @media (max-width: $breakpoint-md) {
+    font-size: clamp(40px, 8vw, 56px);
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 36px;
+  }
+}
+
+.brand-description {
+  margin: 24px 0 0;
+  color: rgba($color-text-light, 0.75);
+  font-size: clamp(18px, 1.6vw, 26px);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  font-weight: 300;
+  max-width: 90%;
+
+  @media (max-width: $breakpoint-md) {
+    margin: $space-md 0 0;
+    font-size: 18px;
+    max-width: 100%;
+  }
+}
+
+.brand-company {
+  max-width: 480px;
+  color: rgba($color-text-light, 0.85);
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  padding-left: 2px;
+
+  p {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    color: rgba($color-text-light, 0.72);
+  }
+
+  p + p {
+    margin-top: 2px;
+  }
+}
+
+.brand-company-name {
+  margin: 0 0 10px 0;
+  font-size: clamp(22px, 2.3vw, 38px);
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: $color-text-light;
+}
+
+.brand-company-label {
+  color: rgba($color-text-light, 0.62);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.brand-company-value {
+  color: rgba($color-text-light, 0.88);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.brand-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 78% 42%, rgba(99, 165, 255, 0.26) 0, rgba(99, 165, 255, 0) 36%),
+    radial-gradient(circle at 50% 84%, rgba(80, 147, 255, 0.18) 0, rgba(80, 147, 255, 0) 42%);
+  z-index: 1;
+}
+
+.brand-decoration {
+  position: absolute;
+  bottom: -220px;
+  right: -100px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  border: 1px solid rgba(123, 186, 255, 0.28);
+  z-index: 1;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(123, 186, 255, 0.2);
+  }
+
+  &::before {
+    width: 640px;
+    height: 640px;
+    bottom: -100px;
+    right: -100px;
+  }
+
+  &::after {
+    width: 320px;
+    height: 320px;
+    bottom: 20px;
+    right: 20px;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    width: 320px;
+    height: 320px;
+    bottom: -140px;
+    right: -80px;
+  }
+}
+
+// ============================================================================
+// Form Panel & Container
+// ============================================================================
+.form-panel {
+  background: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp($space-xl, 8vw, 100px) clamp($space-lg, 5vw, 60px);
+
+  @media (max-width: $breakpoint-md) {
+    padding: $space-2xl $space-xl;
+    min-height: auto;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    padding: $space-xl $space-md;
+  }
+}
+
+.form-container {
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+.form-heading-group {
+  margin-bottom: 48px;
+}
+
+.form-title {
+  margin: 0 0 12px 0;
+  color: #0f172a;
+  font-size: clamp(32px, 3.5vw, 44px);
+  line-height: $line-height-tight;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: 32px;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 28px;
+  }
+}
+
+.form-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 15px;
+  }
+}
+
+// ============================================================================
+// Error Message
+// ============================================================================
+.error-message {
+  margin: 0 0 24px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  font-size: 14px;
+  line-height: $line-height-normal;
+  display: flex;
+  align-items: center;
+  animation: errorSlideIn 0.3s ease-out;
+
+  &::before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+}
+
+@keyframes errorSlideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
@@ -187,23 +448,495 @@
   }
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// ============================================================================
+// Form Field Group
+// ============================================================================
+.form-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 24px;
+
+  @media (max-width: $breakpoint-sm) {
+    margin-bottom: 20px;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+
+  &:last-of-type {
+    margin-bottom: 40px;
   }
 }
 
-@media (max-width: 600px) {
-  .auth-page {
-    padding: 10px;
-    
-    .auth-container {
-      padding: 30px 20px;
+// ============================================================================
+// Field Label (Always Visible)
+// ============================================================================
+.field-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: $line-height-normal;
+  letter-spacing: 0.01em;
+
+  &::after {
+    content: " *";
+    color: #ef4444;
+    opacity: 0.8;
+  }
+}
+
+// ============================================================================
+// Text Input (Email, Password)
+// ============================================================================
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-wrapper-focused {
+  .text-input {
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12),
+                0 2px 4px rgba(0, 0, 0, 0.02);
+  }
+}
+
+.input-wrapper-valid {
+  .text-input {
+    border-color: #10b981;
+    background: #f0fdf4;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  }
+}
+
+.input-wrapper-invalid {
+  .text-input {
+    border-color: #ef4444;
+    background: #fef2f2;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    animation: shake 0.4s ease-in-out;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.input-icon {
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+  border-radius: 8px;
+
+  &:hover {
+    color: #64748b;
+    background: rgba(100, 116, 139, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    color: #3b82f6;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.text-input {
+  width: 100%;
+  max-width: 100% !important; // Override global input max-width: 50%
+  height: $input-height;
+  padding: 0 48px 0 20px;
+  margin: 0;
+  box-sizing: border-box;
+  display: block;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 14px;
+  color: #0f172a;
+  font-family: $font-family;
+  font-size: 16px;
+  line-height: $line-height-normal;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12),
+                0 2px 4px rgba(0, 0, 0, 0.02);
+  }
+
+  &:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    height: 52px;
+    padding: 0 44px 0 16px;
+  }
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  padding: 0;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// ============================================================================
+// Login Button
+// ============================================================================
+.login-button {
+  width: 100%;
+  height: $button-height;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: $color-text-light;
+  font-family: $font-family;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: $line-height-normal;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+
+  // 按钮光泽动画效果
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -8px rgba(37, 99, 235, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+
+    &::before {
+      left: 100%;
     }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px -4px rgba(37, 99, 235, 0.4);
+  }
+
+  &:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    height: 52px;
+    font-size: 16px;
+  }
+}
+
+.button-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  animation: rotate 1s linear infinite;
+}
+
+.spinner-circle {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 45;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+// ============================================================================
+// Form Footer
+// ============================================================================
+.form-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f5f9;
+
+  @media (max-width: $breakpoint-sm) {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+}
+
+.forgot-password-link {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: $font-family;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+
+  &:hover {
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    color: #2563eb;
+  }
+}
+
+.copyright {
+  margin-top: 32px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.6;
+
+  p {
+    margin: 0;
+  }
+}
+
+// ============================================================================
+// Responsive Design: Desktop to Tablet
+// ============================================================================
+@media (max-width: $breakpoint-lg) {
+  .auth-container {
+    min-height: 620px;
+  }
+
+  .brand-heading {
+    font-size: 38px;
+  }
+
+  .form-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .auth-page {
+    padding: $space-sm;
+  }
+
+  .auth-container {
+    border-radius: 16px;
+  }
+
+  .brand-content {
+    text-align: left;
+  }
+
+  .brand-hero {
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
+  }
+
+  .brand-kicker {
+    letter-spacing: 0.16em;
+    margin-bottom: 8px;
+  }
+
+  .brand-heading {
+    font-size: clamp(32px, 6vw, 44px);
+  }
+
+  .brand-company {
+    max-width: 100%;
+    font-size: 14px;
+  }
+
+  .brand-company-name {
+    font-size: 24px;
+  }
+
+  .form-panel {
+    padding: $space-lg;
+  }
+
+  .form-title {
+    font-size: clamp(24px, 8vw, 32px);
+  }
+}
+
+// ============================================================================
+// Responsive Design: Mobile
+// ============================================================================
+@media (max-width: $breakpoint-sm) {
+  .auth-page {
+    padding: $space-xs;
+  }
+
+  .auth-container {
+    border-radius: 16px;
+    min-height: auto;
+  }
+
+  .brand-heading {
+    font-size: 28px;
+    letter-spacing: 0.04em;
+  }
+
+  .brand-description {
+    font-size: $font-size-sm;
+    letter-spacing: 0;
+  }
+
+  .brand-kicker {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
+  .form-title {
+    font-size: 24px;
+  }
+
+  .form-container {
+    max-width: 100%;
+  }
+
+  .text-input,
+  .login-button {
+    height: 52px;
+  }
+
+  .text-input {
+    font-size: $font-size-base;
+  }
+
+  .login-button {
+    font-size: $font-size-base;
+  }
+
+  .field-label {
+    font-size: 13px;
+  }
+
+  .error-message {
+    font-size: 12px;
+    padding: $space-sm;
   }
 }
