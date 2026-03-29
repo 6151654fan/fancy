@@ -263,25 +263,7 @@ export function SideBar(props: { className?: string }) {
         subTitle="您的本地私有化智能助手"
         logo={<ChatGptIcon />}
         shouldNarrow={shouldNarrow}
-      >
-        {/* 顶部仅保留基础功能按钮，保持简洁 */}
-        <div className={styles["sidebar-header-bar"]}>
-          {/* <IconButton
-            icon={<MaskIcon />}
-            text={shouldNarrow ? undefined : Locale.Mask.Name}
-            className={styles["sidebar-bar-button"]}
-            onClick={() => navigate(Path.Masks)}
-            shadow  
-          /> */}
-          <IconButton
-            icon={<SettingsIcon />}
-            text={shouldNarrow ? undefined : "设置"}
-            className={styles["sidebar-bar-button"]}
-            onClick={() => navigate(Path.Settings)}
-            shadow
-          />
-        </div>
-      </SideBarHeader>
+      ></SideBarHeader>
 
       <div
         style={{
@@ -291,6 +273,30 @@ export function SideBar(props: { className?: string }) {
           overflow: "hidden",
         }}
       >
+        {/* 新建对话按钮 - 放在侧边栏的最上方（聊天列表的顶部） */}
+        <div
+          style={{
+            padding: "10px 20px 5px 20px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <IconButton
+            icon={<AddIcon />}
+            text={shouldNarrow ? undefined : "新建对话"}
+            className={styles["sidebar-new-chat-btn"]}
+            onClick={() => {
+              chatStore.newSession();
+              navigate(Path.Chat);
+            }}
+            shadow
+            style={{
+              width: "100%",
+              height: "40px",
+            }}
+          />
+        </div>
+
         {/* 可滚动聊天列表 */}
         <div style={{ flex: 1, overflow: "auto" }}>
           <SideBarBody
@@ -318,25 +324,15 @@ export function SideBar(props: { className?: string }) {
           boxSizing: "border-box",
         }}
       >
-        {/* 新建对话按钮 - 独占一行，居中，宽度增加，高度增加，文字加大加粗 */}
+        {/* 设置按钮 - 移动到侧边栏最底部，放在用户信息区域上方 */}
         <div style={{ display: "flex", justifyContent: "center" }}>
           <IconButton
-            icon={<AddIcon />}
-            text={shouldNarrow ? undefined : "新建对话"}
-            className={styles["sidebar-new-chat-btn"]}
-            onClick={() => {
-              chatStore.newSession();
-              navigate(Path.Chat);
-            }}
+            icon={<SettingsIcon />}
+            text={shouldNarrow ? undefined : "设置"}
+            className={styles["sidebar-bar-button"]}
+            onClick={() => navigate(Path.Settings)}
             shadow
-            style={{
-              width: "80%",
-              height: "52px",
-              // fontSize: "20px",
-              // fontWeight: "600",
-              // backgroundColor: "#4f46e5", // 【新增】你的品牌主题蓝色
-              // color: "white", // 【新增】文字和图标变成白色
-            }}
+            style={{ width: "80%" }}
           />
         </div>
 

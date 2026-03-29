@@ -225,6 +225,7 @@ function Screen() {
   // 顶部导航栏组件
   const TopNavigation = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const config = useAppConfig();
     const accessStore = useAccessStore();
 
@@ -237,6 +238,18 @@ function Screen() {
       return `http://${trimmed}`;
     }
 
+    // 检查当前路径是否与按钮路径匹配
+    const isActive = (path: string) => {
+      // 当路径为 Path.Chat 或 Path.Home 时，也将“推理服务”按钮视为活动状态
+      if (
+        path === Path.Inference &&
+        (location.pathname === Path.Chat || location.pathname === Path.Home)
+      ) {
+        return true;
+      }
+      return location.pathname === path;
+    };
+
     return (
       <div className={styles["top-nav"]}>
         <div className={styles["top-nav-buttons"]}>
@@ -244,13 +257,17 @@ function Screen() {
             icon={<DiscoveryIcon />}
             text="产品主页"
             onClick={() => navigate(Path.ProductHome)}
-            className={styles["top-nav-button"]}
+            className={clsx(styles["top-nav-button"], {
+              [styles["top-nav-button-active"]]: isActive(Path.ProductHome),
+            })}
           />
           <IconButton
             icon={<McpIcon />}
             text="推理服务"
             onClick={() => navigate(Path.Inference)}
-            className={styles["top-nav-button"]}
+            className={clsx(styles["top-nav-button"], {
+              [styles["top-nav-button-active"]]: isActive(Path.Inference),
+            })}
           />
           {accessStore.isAdmin() && (
             <>
@@ -258,19 +275,27 @@ function Screen() {
                 icon={<AddIcon />}
                 text="模型监控"
                 onClick={() => navigate(Path.Dashboard)}
-                className={styles["top-nav-button"]}
+                className={clsx(styles["top-nav-button"], {
+                  [styles["top-nav-button-active"]]: isActive(Path.Dashboard),
+                })}
               />
               <IconButton
                 icon={<DiscoveryIcon />}
                 text="实时指标"
                 onClick={() => navigate(Path.Grafana)}
-                className={styles["top-nav-button"]}
+                className={clsx(styles["top-nav-button"], {
+                  [styles["top-nav-button-active"]]: isActive(Path.Grafana),
+                })}
               />
               <IconButton
                 icon={<McpIcon />}
                 text="用户管理"
                 onClick={() => navigate(Path.UserManagement)}
-                className={styles["top-nav-button"]}
+                className={clsx(styles["top-nav-button"], {
+                  [styles["top-nav-button-active"]]: isActive(
+                    Path.UserManagement,
+                  ),
+                })}
               />
             </>
           )}
@@ -289,7 +314,9 @@ function Screen() {
             icon={<DragIcon />}
             text="样机展示"
             onClick={() => navigate(Path.Showcase)}
-            className={styles["top-nav-button"]}
+            className={clsx(styles["top-nav-button"], {
+              [styles["top-nav-button-active"]]: isActive(Path.Showcase),
+            })}
           />
         </div>
       </div>
