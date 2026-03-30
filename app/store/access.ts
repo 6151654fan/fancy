@@ -257,19 +257,34 @@ export const useAccessStore = createPersistStore(
     },
 
     isAdmin() {
-      return get().userSession?.user?.role === 'admin';
+      return get().userSession?.user?.role === "admin";
     },
 
     login(userSession: any) {
       set((state) => ({ ...state, userSession }));
+
+      // 登录成功后从服务器同步聊天记录
+      if (userSession?.user?.id) {
+        import("../store/chat").then(({ useChatStore }) => {
+          useChatStore
+            .getState()
+            .syncFromServer(userSession.user.id)
+            .catch(console.error);
+        });
+      }
     },
 
     logout() {
       set((state) => ({ ...state, userSession: null }));
+
+      // 登出时清空聊天记录，确保数据隔离
+      import("../store/chat").then(({ useChatStore }) => {
+        useChatStore.getState().clearSessions();
+      });
     },
 
     getUserRole() {
-      return get().userSession?.user?.role || 'user';
+      return get().userSession?.user?.role || "user";
     },
     fetch() {
       if (fetchState > 0 || getClientConfig()?.buildMode === "export") return;

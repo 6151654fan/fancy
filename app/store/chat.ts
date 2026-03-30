@@ -398,6 +398,36 @@ export const useChatStore = createPersistStore(
           },
           5000,
         );
+
+        // 5秒后发送删除请求到后端，确保用户有时间撤销
+        setTimeout(() => {
+          // 获取当前登录用户的ID
+          const accessStore = useAccessStore.getState();
+          const userId = accessStore.userSession?.user?.id;
+
+          if (userId && deletedSession.id) {
+            // 调用后端DELETE接口删除会话
+            fetch("/api/sync", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userId,
+                sessionId: deletedSession.id,
+              }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (!data.success) {
+                  console.error("删除会话失败:", data.error);
+                }
+              })
+              .catch((error) => {
+                console.error("删除会话网络错误:", error);
+              });
+          }
+        }, 5000);
       },
 
       currentSession() {
@@ -425,6 +455,15 @@ export const useChatStore = createPersistStore(
         get().checkMcpJson(message);
 
         get().summarizeSession(false, targetSession);
+
+        // 静默上传消息到服务器
+        const accessStore = useAccessStore.getState();
+        const userId = accessStore.userSession?.user?.id;
+        if (userId) {
+          get()
+            .syncToServer(userId, targetSession, message)
+            .catch(console.error);
+        }
       },
 
       async onUserInput(
@@ -477,6 +516,15 @@ export const useChatStore = createPersistStore(
             savedUserMessage,
             botMessage,
           ]);
+
+          // 静默上传用户消息到服务器
+          const accessStore = useAccessStore.getState();
+          const userId = accessStore.userSession?.user?.id;
+          if (userId) {
+            get()
+              .syncToServer(userId, session, savedUserMessage)
+              .catch(console.error);
+          }
         });
 
         const api: ClientApi = getClientApi(modelConfig.providerName);
@@ -551,25 +599,30 @@ export const useChatStore = createPersistStore(
       },
 
       getMemoryPrompt() {
-    const session = get().currentSession();
+        const session = get().currentSession();
 
-    if (session.memoryPrompt.length) {
-      try {
-        return {
-          role: "system",
-          content: Locale.Store.Prompt.History(session.memoryPrompt),
-          date: "",
-        } as ChatMessage;
-      } catch (error) {
-        console.error("Error accessing Locale.Store.Prompt.History:", error);
-        return {
-          role: "system",
-          content: "This is a summary of the chat history as a recap: " + session.memoryPrompt,
-          date: "",
-        } as ChatMessage;
-      }
-    }
-  },
+        if (session.memoryPrompt.length) {
+          try {
+            return {
+              role: "system",
+              content: Locale.Store.Prompt.History(session.memoryPrompt),
+              date: "",
+            } as ChatMessage;
+          } catch (error) {
+            console.error(
+              "Error accessing Locale.Store.Prompt.History:",
+              error,
+            );
+            return {
+              role: "system",
+              content:
+                "This is a summary of the chat history as a recap: " +
+                session.memoryPrompt,
+              date: "",
+            } as ChatMessage;
+          }
+        }
+      },
 
       async getMessagesWithMemory() {
         const session = get().currentSession();
@@ -727,23 +780,26 @@ export const useChatStore = createPersistStore(
             messages.length - modelConfig.historyMessageCount,
           );
           const topicMessages = messages
-          .slice(
-            startIndex < messages.length ? startIndex : messages.length - 1,
-            messages.length,
-          )
-          .concat(
-            createMessage({
-              role: "user",
-              content: (() => {
-                try {
-                  return Locale.Store.Prompt.Topic;
-                } catch (error) {
-                  console.error("Error accessing Locale.Store.Prompt.Topic:", error);
-                  return "Please generate a four to five word title summarizing our conversation without any lead-in, punctuation, quotation marks, periods, symbols, bold text, or additional text. Remove enclosing quotation marks.";
-                }
-              })(),
-            }),
-          );
+            .slice(
+              startIndex < messages.length ? startIndex : messages.length - 1,
+              messages.length,
+            )
+            .concat(
+              createMessage({
+                role: "user",
+                content: (() => {
+                  try {
+                    return Locale.Store.Prompt.Topic;
+                  } catch (error) {
+                    console.error(
+                      "Error accessing Locale.Store.Prompt.Topic:",
+                      error,
+                    );
+                    return "Please generate a four to five word title summarizing our conversation without any lead-in, punctuation, quotation marks, periods, symbols, bold text, or additional text. Remove enclosing quotation marks.";
+                  }
+                })(),
+              }),
+            );
           api.llm.chat({
             messages: topicMessages,
             config: {
@@ -795,28 +851,31 @@ export const useChatStore = createPersistStore(
         );
 
         if (
-        historyMsgLength > modelConfig.compressMessageLengthThreshold &&
-        modelConfig.sendMemory
-      ) {
-        /** Destruct max_tokens while summarizing
-         * this param is just shit
-         **/
-        const { max_tokens, ...modelcfg } = modelConfig;
-        api.llm.chat({
-          messages: toBeSummarizedMsgs.concat(
-            createMessage({
-              role: "system",
-              content: (() => {
-                try {
-                  return Locale.Store.Prompt.Summarize;
-                } catch (error) {
-                  console.error("Error accessing Locale.Store.Prompt.Summarize:", error);
-                  return "Summarize the discussion briefly in 200 words or less to use as a prompt for future context.";
-                }
-              })(),
-              date: "",
-            }),
-          ),
+          historyMsgLength > modelConfig.compressMessageLengthThreshold &&
+          modelConfig.sendMemory
+        ) {
+          /** Destruct max_tokens while summarizing
+           * this param is just shit
+           **/
+          const { max_tokens, ...modelcfg } = modelConfig;
+          api.llm.chat({
+            messages: toBeSummarizedMsgs.concat(
+              createMessage({
+                role: "system",
+                content: (() => {
+                  try {
+                    return Locale.Store.Prompt.Summarize;
+                  } catch (error) {
+                    console.error(
+                      "Error accessing Locale.Store.Prompt.Summarize:",
+                      error,
+                    );
+                    return "Summarize the discussion briefly in 200 words or less to use as a prompt for future context.";
+                  }
+                })(),
+                date: "",
+              }),
+            ),
             config: {
               ...modelcfg,
               stream: true,
@@ -867,6 +926,99 @@ export const useChatStore = createPersistStore(
         set({
           lastInput,
         });
+      },
+
+      // 从服务器同步数据
+      async syncFromServer(userId: string) {
+        try {
+          const response = await fetch(`/api/sync?userId=${userId}`);
+          if (!response.ok) {
+            throw new Error("同步失败");
+          }
+          const serverSessions = await response.json();
+
+          if (serverSessions && serverSessions.length > 0) {
+            // 转换服务器数据为本地格式
+            const convertedSessions = serverSessions.map(
+              (serverSession: any) => ({
+                id: serverSession.id,
+                topic: serverSession.topic,
+                memoryPrompt: "",
+                messages: serverSession.messages.map((msg: any) => ({
+                  ...msg,
+                  content:
+                    typeof msg.content === "string"
+                      ? JSON.parse(msg.content)
+                      : msg.content,
+                  streaming: false,
+                  isError: false,
+                })),
+                stat: {
+                  tokenCount: 0,
+                  wordCount: 0,
+                  charCount: 0,
+                },
+                lastUpdate: Date.now(),
+                lastSummarizeIndex: 0,
+                mask: createEmptyMask(),
+              }),
+            );
+
+            // 更新本地状态
+            set(() => ({
+              sessions:
+                convertedSessions.length > 0
+                  ? convertedSessions
+                  : [createEmptySession()],
+              currentSessionIndex: 0,
+            }));
+
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("同步数据失败:", error);
+          return false;
+        }
+      },
+
+      // 上传消息到服务器
+      async syncToServer(
+        userId: string,
+        session: ChatSession,
+        message: ChatMessage,
+      ) {
+        try {
+          const response = await fetch("/api/sync", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId,
+              session: {
+                id: session.id,
+                topic: session.topic,
+                createdAt: new Date().toISOString(),
+              },
+              message: {
+                id: message.id,
+                role: message.role,
+                content: message.content,
+                date: message.date,
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("上传失败");
+          }
+
+          return true;
+        } catch (error) {
+          console.error("上传数据失败:", error);
+          return false;
+        }
       },
 
       /** check if the message contains MCP JSON and execute the MCP action */
