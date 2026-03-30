@@ -218,6 +218,107 @@ function Screen() {
     );
   }
 
+  // 顶部导航栏组件
+  const TopNavigation = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const config = useAppConfig();
+    const accessStore = useAccessStore();
+
+    const DEFAULT_OPENCLAW_URL = "http://localhost:18789/openclaw/";
+
+    function normalizeOpenclawUrl(url: string) {
+      const trimmed = url.trim();
+      if (!trimmed) return DEFAULT_OPENCLAW_URL;
+      if (/^https?:\/\//i.test(trimmed)) return trimmed;
+      return `http://${trimmed}`;
+    }
+
+    // 检查当前路径是否与按钮路径匹配
+    const isActive = (path: string) => {
+      // 当路径为 Path.Chat 或 Path.Home 时，也将“推理服务”按钮视为活动状态
+      if (
+        path === Path.Inference &&
+        (location.pathname === Path.Chat || location.pathname === Path.Home)
+      ) {
+        return true;
+      }
+      return location.pathname === path;
+    };
+
+    return (
+      <div className={styles["top-nav"]}>
+        <div className={styles["top-nav-buttons"]}>
+          <IconButton
+            icon={<DiscoveryIcon />}
+            text="产品主页"
+            onClick={() => navigate(Path.ProductHome)}
+            className={clsx(styles["top-nav-button"], {
+              [styles["top-nav-button-active"]]: isActive(Path.ProductHome),
+            })}
+          />
+          <IconButton
+            icon={<McpIcon />}
+            text="推理服务"
+            onClick={() => navigate(Path.Inference)}
+            className={clsx(styles["top-nav-button"], {
+              [styles["top-nav-button-active"]]: isActive(Path.Inference),
+            })}
+          />
+          {accessStore.isAdmin() && (
+            <>
+              <IconButton
+                icon={<AddIcon />}
+                text="模型监控"
+                onClick={() => navigate(Path.Dashboard)}
+                className={clsx(styles["top-nav-button"], {
+                  [styles["top-nav-button-active"]]: isActive(Path.Dashboard),
+                })}
+              />
+              <IconButton
+                icon={<DiscoveryIcon />}
+                text="实时指标"
+                onClick={() => navigate(Path.Grafana)}
+                className={clsx(styles["top-nav-button"], {
+                  [styles["top-nav-button-active"]]: isActive(Path.Grafana),
+                })}
+              />
+              <IconButton
+                icon={<McpIcon />}
+                text="用户管理"
+                onClick={() => navigate(Path.UserManagement)}
+                className={clsx(styles["top-nav-button"], {
+                  [styles["top-nav-button-active"]]: isActive(
+                    Path.UserManagement,
+                  ),
+                })}
+              />
+            </>
+          )}
+          <IconButton
+            icon={<McpIcon />}
+            text="Openclaw"
+            onClick={() => {
+              const targetUrl = normalizeOpenclawUrl(
+                config.openclawConfig?.url ?? DEFAULT_OPENCLAW_URL,
+              );
+              window.open(targetUrl, "_blank", "noopener,noreferrer");
+            }}
+            className={styles["top-nav-button"]}
+          />
+          <IconButton
+            icon={<DragIcon />}
+            text="样机展示"
+            onClick={() => navigate(Path.Showcase)}
+            className={clsx(styles["top-nav-button"], {
+              [styles["top-nav-button-active"]]: isActive(Path.Showcase),
+            })}
+          />
+        </div>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     if (isAuth) return <AuthPage />;
     return (

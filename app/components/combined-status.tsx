@@ -383,9 +383,10 @@ function MiniInfoCard({ label, value, sub }: any) {
     <div
       style={{
         padding: "12px 16px",
-        backgroundColor: "#fff",
-        border: "1px solid #e2e8f0",
+        backgroundColor: "#f0f9ff",
+        border: "1px solid #dbeafe",
         borderRadius: "12px",
+        boxShadow: "none",
       }}
     >
       <p
@@ -452,6 +453,20 @@ function CompactProgress({ label, percent, value, desc, color }: any) {
 }
 
 function CompactDetailRow({ label, value, valueStyle = {} }: any) {
+  // 分离数字和单位
+  const parseValue = (value: string) => {
+    // 匹配数字部分（包括小数和范围）
+    const numberMatch = value.match(/^([\d\s\-]+)/);
+    if (numberMatch) {
+      const numberPart = numberMatch[1];
+      const unitPart = value.substring(numberPart.length);
+      return { numberPart, unitPart };
+    }
+    return { numberPart: value, unitPart: "" };
+  };
+
+  const { numberPart, unitPart } = parseValue(value);
+
   return (
     <div
       style={{
@@ -465,22 +480,48 @@ function CompactDetailRow({ label, value, valueStyle = {} }: any) {
       <span style={{ color: "#64748b", fontSize: "11px", fontWeight: "600" }}>
         {label}
       </span>
-      <span
-        style={{
-          color: "#0f172a",
-          fontSize: "13px",
-          fontWeight: "700",
-          fontFamily: "monospace",
-          ...valueStyle,
-        }}
-      >
-        {value}
-      </span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+        <span
+          style={{
+            color: "#0f172a",
+            fontSize: "16px",
+            fontWeight: "850",
+            fontFamily: "'Roboto Mono', 'DIN', monospace",
+            ...valueStyle,
+          }}
+        >
+          {numberPart}
+        </span>
+        <span
+          style={{
+            color: "#94a3b8",
+            fontSize: "11px",
+            fontWeight: "500",
+            fontFamily: "'Roboto Mono', 'DIN', monospace",
+          }}
+        >
+          {unitPart}
+        </span>
+      </div>
     </div>
   );
 }
 
 function CompactStatCard({ title, value, label, progress, color }: any) {
+  // 根据进度值确定渐变色
+  const getProgressGradient = (progress: number) => {
+    if (progress < 50) {
+      // 低负载：品牌蓝渐变
+      return "linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)";
+    } else if (progress < 80) {
+      // 中负载：橙色渐变
+      return "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)";
+    } else {
+      // 高负载：红色渐变
+      return "linear-gradient(90deg, #ef4444 0%, #f87171 100%)";
+    }
+  };
+
   return (
     <div
       style={{
@@ -505,19 +546,20 @@ function CompactStatCard({ title, value, label, progress, color }: any) {
       </p>
       <h3
         style={{
-          fontSize: "20px",
+          fontSize: "24px",
           fontWeight: "850",
           margin: "0 0 8px 0",
           color: "#0f172a",
+          fontFamily: "'Roboto Mono', 'DIN', monospace",
         }}
       >
         {value}
       </h3>
       <div
         style={{
-          height: "6px",
+          height: "10px",
           background: "#f1f5f9",
-          borderRadius: "3px",
+          borderRadius: "8px",
           overflow: "hidden",
           marginBottom: "8px",
         }}
@@ -526,7 +568,8 @@ function CompactStatCard({ title, value, label, progress, color }: any) {
           style={{
             width: `${Math.min(progress, 100)}%`,
             height: "100%",
-            background: color,
+            background: getProgressGradient(progress),
+            borderRadius: "8px",
             transition: "width 1s ease",
           }}
         ></div>

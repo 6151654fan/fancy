@@ -345,21 +345,52 @@ export function SideBar(props: { className?: string }) {
     >
       {/* 头部区域 */}
       <SideBarHeader
-        title={isCollapsed ? undefined : "普惠AI一体机"}
-        subTitle={isCollapsed ? undefined : "本地私有化智能助手"}
-        onCollapse={closeSidebar}
-        isCollapsed={isCollapsed}
-      />
+        title="普惠 AI 一体机"
+        subTitle="您的本地私有化智能助手"
+        logo={<ChatGptIcon />}
+        shouldNarrow={shouldNarrow}
+      ></SideBarHeader>
 
-      {/* 收起状态下：统一按钮容器 */}
-      {isCollapsed ? (
-        <div className={styles["sidebar-collapsed-buttons"]}>
-          {/* 展开按钮 */}
-          <button
-            className={styles["sidebar-toggle-btn"]}
-            onClick={() => config.update((c) => { c.sidebarCollapsed = false; })}
-            aria-label="展开侧边栏"
-            type="button"
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          overflow: "hidden",
+        }}
+      >
+        {/* 新建对话按钮 - 放在侧边栏的最上方（聊天列表的顶部） */}
+        <div
+          style={{
+            padding: "10px 20px 5px 20px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <IconButton
+            icon={<AddIcon />}
+            text={shouldNarrow ? undefined : "新建对话"}
+            className={styles["sidebar-new-chat-btn"]}
+            onClick={() => {
+              chatStore.newSession();
+              navigate(Path.Chat);
+            }}
+            shadow
+            style={{
+              width: "100%",
+              height: "40px",
+            }}
+          />
+        </div>
+
+        {/* 可滚动聊天列表 */}
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <SideBarBody
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                navigate(Path.Home);
+              }
+            }}
           >
             <ArrowIcon />
           </button>
@@ -397,31 +428,28 @@ export function SideBar(props: { className?: string }) {
               ))}
           </div>
 
-          {/* 分隔线 */}
-          <div className={styles["sidebar-section-divider"]} />
-
-          {/* 新建对话按钮 */}
-          <div className={styles["sidebar-action-section"]}>
-            <NewChatButton isCollapsed={isCollapsed} onClick={handleNewChat} />
-          </div>
-        </>
-      )}
-
-      {/* 聊天列表区域 - 仅展开状态显示 */}
-      {!isCollapsed && (
-        <div className={styles["sidebar-chat-list-container"]}>
-          <div className={styles["sidebar-chat-list-header"]}>最近会话</div>
-          <div className={styles["sidebar-chat-list-scroll"]}>
-            <SideBarBody
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  navigate(Path.Home);
-                }
-              }}
-            >
-              <ChatList narrow={false} />
-            </SideBarBody>
-          </div>
+      {/* 自定义底部布局，不使用SideBarTail */}
+      <div
+        style={{
+          paddingTop: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          padding: "20px 10px 10px 10px",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* 设置按钮 - 移动到侧边栏最底部，放在用户信息区域上方 */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <IconButton
+            icon={<SettingsIcon />}
+            text={shouldNarrow ? undefined : "设置"}
+            className={styles["sidebar-bar-button"]}
+            onClick={() => navigate(Path.Settings)}
+            shadow
+            style={{ width: "80%" }}
+          />
         </div>
       )}
 
