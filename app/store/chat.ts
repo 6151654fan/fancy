@@ -398,6 +398,36 @@ export const useChatStore = createPersistStore(
           },
           5000,
         );
+
+        // 5秒后发送删除请求到后端，确保用户有时间撤销
+        setTimeout(() => {
+          // 获取当前登录用户的ID
+          const accessStore = useAccessStore.getState();
+          const userId = accessStore.userSession?.user?.id;
+
+          if (userId && deletedSession.id) {
+            // 调用后端DELETE接口删除会话
+            fetch("/api/sync", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userId,
+                sessionId: deletedSession.id,
+              }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (!data.success) {
+                  console.error("删除会话失败:", data.error);
+                }
+              })
+              .catch((error) => {
+                console.error("删除会话网络错误:", error);
+              });
+          }
+        }, 5000);
       },
 
       currentSession() {

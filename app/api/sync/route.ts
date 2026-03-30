@@ -125,3 +125,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "上传数据失败" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, sessionId } = body;
+
+    if (!userId || !sessionId) {
+      return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
+    }
+
+    // 开始事务
+    const transaction = db.transaction(() => {
+      // 首先获取会话的数据库ID
+      const session = db
+        .prepare(
+          `
+        SELECT id FROM sessions 
+        WHERE userId = ? AND sessionId = ?
+      `,
+        )
+        .get(userId, sessionId);
+
+      if (session) {
+        // 删除会话相关的所有消息
+        db.prepare(`DELETE FROM messages WHERE sessionId = ?`).run(session.id);
+        // 删除会话本身
+        db.prepare(`DELETE FROM sessions WHERE id = ? AND userId = ?`).run(
+          session.id,
+          userId,
+        );
+      }
+    });
+
+    // 执行事务
+    transaction();
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("删除会话失败:", error);
+    return NextResponse.json({ error: "删除会话失败" }, { status: 500 });
+  }
+}
