@@ -11,6 +11,7 @@ import { ProductHomePage } from "./product-home";
 import { CombinedStatusPage } from "./combined-status";
 import { GrafanaPage } from "./grafana";
 import { UserManagementPage } from "./user-management";
+import { OpenclawPage } from "./openclaw";
 
 //import { MonitorPage } from "./monitor";
 
@@ -43,11 +44,6 @@ import { type ClientApi, getClientApi } from "../client/api";
 import { useAccessStore } from "../store";
 import clsx from "clsx";
 import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
-import { IconButton } from "./button";
-import DiscoveryIcon from "../icons/discovery.svg";
-import McpIcon from "../icons/mcp.svg";
-import AddIcon from "../icons/add.svg";
-import DragIcon from "../icons/drag.svg";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -327,7 +323,6 @@ function Screen() {
     if (isAuth) return <AuthPage />;
     return (
       <>
-        <TopNavigation />
         {!isSd && !isSdNew && (
           <SideBar
             className={clsx({
@@ -360,6 +355,7 @@ function Screen() {
               path={Path.UserManagement}
               element={<UserManagementPage />}
             />
+            <Route path={Path.Openclaw} element={<OpenclawPage />} />
           </Routes>
         </WindowContent>
       </>
@@ -417,7 +413,7 @@ export function Home() {
   }, []);
 
   if (!useHasHydrated()) {
-    return <Loading />;
+    return <Loading noLogo />;
   }
 
   return (
