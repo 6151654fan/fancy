@@ -1,0 +1,334 @@
+// =========================================
+// Openclaw 介绍页面样式
+// 风格: 现代简洁、精致优雅
+// 主色: 红色
+// =========================================
+
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 24px;
+$spacing-2xl: 32px;
+$spacing-3xl: 48px;
+$spacing-4xl: 64px;
+
+// 主色调 - 红色
+$primary-color: #ef4444;
+$primary-dark: #dc2626;
+$primary-light: #f87171;
+$primary-50: #fef2f2;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-3xl $spacing-xl;
+  padding-top: $spacing-2xl;
+  background: linear-gradient(180deg, #fef2f2 0%, #fff1f2 50%, #ffffff 100%);
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  flex: 1;
+  width: 100%;
+
+  // 背景装饰
+  &::before {
+    content: "";
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -150px;
+    left: -150px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+// =========================================
+// Hero Section
+// =========================================
+.hero {
+  text-align: center;
+  margin-bottom: $spacing-3xl;
+  position: relative;
+  z-index: 1;
+}
+
+.heroGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.18) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.heroIcon {
+  position: relative;
+  display: inline-flex;
+  margin-bottom: $spacing-xl;
+}
+
+.heroIconInner {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+
+  svg {
+    width: 80px;
+    height: 80px;
+  }
+
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+.heroTitle {
+  font-size: 42px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 $spacing-sm;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.heroSubtitle {
+  font-size: 20px;
+  color: #334155;
+  margin: 0 0 $spacing-sm;
+  font-weight: 500;
+}
+
+.heroDesc {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+// =========================================
+// CTA Section
+// =========================================
+.ctaSection {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  justify-content: center;
+}
+
+.ctaCard {
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 24px;
+  padding: $spacing-3xl $spacing-2xl;
+  width: 100%;
+  box-shadow:
+    0 4px 6px -1px rgba(239, 68, 68, 0.05),
+    0 10px 20px -5px rgba(239, 68, 68, 0.08);
+}
+
+.ctaTitle {
+  font-size: 28px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 $spacing-sm;
+  letter-spacing: -0.01em;
+}
+
+.ctaDesc {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 $spacing-xl;
+  line-height: 1.6;
+}
+
+.ctaButtons {
+  display: flex;
+  gap: $spacing-md;
+  justify-content: center;
+  margin-bottom: $spacing-xl;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 14px $spacing-2xl;
+  background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  min-width: 180px;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 12px -2px rgba(239, 68, 68, 0.45),
+      0 8px 24px -4px rgba(239, 68, 68, 0.35);
+
+    svg {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 14px $spacing-2xl;
+  background: #ffffff;
+  color: $primary-color;
+  font-size: 15px;
+  font-weight: 500;
+  border: 2px solid #fecaca;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  min-width: 140px;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background: $primary-50;
+    border-color: $primary-color;
+    transform: translateY(-2px);
+
+    svg {
+      transform: translateY(2px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+.ctaInfo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding-top: $spacing-lg;
+  border-top: 1px solid #fef2f2;
+}
+
+.ctaLabel {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.ctaUrl {
+  font-size: 12px;
+  color: #64748b;
+  background: #fef2f2;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: 6px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+}
+
+// =========================================
+// Footer
+// =========================================
+.footer {
+  margin-top: $spacing-3xl;
+  position: relative;
+  z-index: 1;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-xl;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background: #ffffff;
+    color: #334155;
+    border-color: #fecaca;
+    box-shadow: 0 2px 8px -2px rgba(239, 68, 68, 0.1);
+
+    svg {
+      transform: translateX(-4px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
