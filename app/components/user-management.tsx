@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./user-management.module.scss";
 import { IconButton } from "./button";
+import clsx from "clsx";
 
 interface User {
   id: string;
@@ -27,7 +28,7 @@ export function UserManagementPage() {
     try {
       setLoading(true);
       setError("");
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/users", {
         method: "GET",
       });
       const data = await response.json();
@@ -54,8 +55,8 @@ export function UserManagementPage() {
       setError("");
       const userSession = localStorage.getItem("userSession");
       const token = userSession ? JSON.parse(userSession).token : null;
-      const response = await fetch("/api/login", {
-        method: "PUT",
+      const response = await fetch("/api/users", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -82,7 +83,7 @@ export function UserManagementPage() {
       try {
         setLoading(true);
         setError("");
-        const response = await fetch(`/api/login?id=${userId}`, {
+        const response = await fetch(`/api/users?id=${userId}`, {
           method: "DELETE",
         });
         const data = await response.json();
@@ -147,9 +148,11 @@ export function UserManagementPage() {
                 <td>
                   {user.id !== "1" && (
                     <span
-                      className={styles["delete-button"]}
-                      onClick={() => handleDeleteUser(user.id)}
-                      disabled={loading}
+                      className={clsx(styles["delete-button"], {
+                        [styles["disabled"]]: loading,
+                      })}
+                      onClick={() => !loading && handleDeleteUser(user.id)}
+                      style={{ cursor: loading ? "not-allowed" : "pointer" }}
                     >
                       删除
                     </span>
