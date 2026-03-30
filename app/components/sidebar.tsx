@@ -4,9 +4,16 @@ import styles from "./home.module.scss";
 
 import { IconButton } from "./button";
 import SettingsIcon from "../icons/settings.svg";
-import ChatGptIcon from "../icons/chatgpt.svg";
 import AddIcon from "../icons/add.svg";
+import ArrowIcon from "../icons/arrow.svg";
+import BotIcon from "../icons/bot.svg";
+import DiscoveryIcon from "../icons/discovery.svg";
+import ClawIcon from "../icons/openclaw.svg";
 import DragIcon from "../icons/drag.svg";
+import HomeIcon from "../icons/home.svg";
+import ChartIcon from "../icons/chart.svg";
+import UserIcon from "../icons/user.svg";
+import LogoutIcon from "../icons/logout.svg";
 
 import Locale from "../locales";
 
@@ -14,13 +21,10 @@ import { useAppConfig, useChatStore, useAccessStore } from "../store";
 
 import {
   DEFAULT_SIDEBAR_WIDTH,
-  MAX_SIDEBAR_WIDTH,
-  MIN_SIDEBAR_WIDTH,
-  NARROW_SIDEBAR_WIDTH,
   Path,
 } from "../constant";
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { isIOS, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
@@ -64,84 +68,53 @@ export function useHotKey() {
   });
 }
 
-export function useDragSideBar() {
-  const limit = (x: number) => Math.min(MAX_SIDEBAR_WIDTH, x);
-
+// 简化的侧边栏状态管理
+export function useSideBarToggle() {
   const config = useAppConfig();
-  const startX = useRef(0);
-  const startDragWidth = useRef(config.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH);
-  const lastUpdateTime = useRef(Date.now());
+  const isMobileScreen = useMobileScreen();
 
-  const toggleSideBar = () => {
+  // 使用 sidebarCollapsed 配置项（需要添加到 config 中）
+  const isCollapsed = config.sidebarCollapsed ?? false;
+
+  const toggleSidebar = () => {
     config.update((config) => {
-      if (config.sidebarWidth < MIN_SIDEBAR_WIDTH) {
-        config.sidebarWidth = DEFAULT_SIDEBAR_WIDTH;
-      } else {
-        config.sidebarWidth = NARROW_SIDEBAR_WIDTH;
-      }
+      config.sidebarCollapsed = !config.sidebarCollapsed;
     });
   };
 
-  const onDragStart = (e: MouseEvent) => {
-    // Remembers the initial width each time the mouse is pressed
-    startX.current = e.clientX;
-    startDragWidth.current = config.sidebarWidth;
-    const dragStartTime = Date.now();
-
-    const handleDragMove = (e: MouseEvent) => {
-      if (Date.now() < lastUpdateTime.current + 20) {
-        return;
-      }
-      lastUpdateTime.current = Date.now();
-      const d = e.clientX - startX.current;
-      const nextWidth = limit(startDragWidth.current + d);
-      config.update((config) => {
-        if (nextWidth < MIN_SIDEBAR_WIDTH) {
-          config.sidebarWidth = NARROW_SIDEBAR_WIDTH;
-        } else {
-          config.sidebarWidth = nextWidth;
-        }
-      });
-    };
-
-    const handleDragEnd = () => {
-      // In useRef the data is non-responsive, so `config.sidebarWidth` can't get the dynamic sidebarWidth
-      window.removeEventListener("pointermove", handleDragMove);
-      window.removeEventListener("pointerup", handleDragEnd);
-
-      // if user click the drag icon, should toggle the sidebar
-      const shouldFireClick = Date.now() - dragStartTime < 300;
-      if (shouldFireClick) {
-        toggleSideBar();
-      }
-    };
-
-    window.addEventListener("pointermove", handleDragMove);
-    window.addEventListener("pointerup", handleDragEnd);
+  const openSidebar = () => {
+    config.update((config) => {
+      config.sidebarCollapsed = false;
+    });
   };
 
-  const isMobileScreen = useMobileScreen();
-  const shouldNarrow =
-    !isMobileScreen && config.sidebarWidth < MIN_SIDEBAR_WIDTH;
+  const closeSidebar = () => {
+    config.update((config) => {
+      config.sidebarCollapsed = true;
+    });
+  };
 
   useEffect(() => {
-    const barWidth = shouldNarrow
-      ? NARROW_SIDEBAR_WIDTH
-      : limit(config.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH);
-    const sideBarWidth = isMobileScreen ? "100vw" : `${barWidth}px`;
+    const sideBarWidth = isMobileScreen
+      ? "100vw"
+      : isCollapsed
+        ? "0px"
+        : `${DEFAULT_SIDEBAR_WIDTH}px`;
     document.documentElement.style.setProperty("--sidebar-width", sideBarWidth);
-  }, [config.sidebarWidth, isMobileScreen, shouldNarrow]);
+  }, [isCollapsed, isMobileScreen]);
 
   return {
-    onDragStart,
-    shouldNarrow,
+    isCollapsed,
+    toggleSidebar,
+    openSidebar,
+    closeSidebar,
   };
 }
 
 export function SideBarContainer(props: {
   children: React.ReactNode;
-  onDragStart: (e: MouseEvent) => void;
-  shouldNarrow: boolean;
+  isCollapsed: boolean;
+  onClose?: () => void;
   className?: string;
 }) {
   const isMobileScreen = useMobileScreen();
@@ -149,25 +122,42 @@ export function SideBarContainer(props: {
     () => isIOS() && isMobileScreen,
     [isMobileScreen],
   );
-  const { children, className, onDragStart, shouldNarrow } = props;
+  const { children, className, isCollapsed, onClose } = props;
+
   return (
-    <div
-      className={clsx(styles.sidebar, className, {
-        [styles["narrow-sidebar"]]: shouldNarrow,
-      })}
-      style={{
-        // #3016 disable transition on ios mobile screen
-        transition: isMobileScreen && isIOSMobile ? "none" : undefined,
-      }}
-    >
-      {children}
+    <>
+      {/* 移动端遮罩层 */}
+      {isMobileScreen && !isCollapsed && (
+        <div
+          className={clsx(styles["sidebar-overlay"], {
+            [styles["sidebar-overlay-active"]]: !isCollapsed,
+          })}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
       <div
-        className={styles["sidebar-drag"]}
-        onPointerDown={(e) => onDragStart(e as any)}
+        className={clsx(styles.sidebar, className, {
+          [styles["sidebar-collapsed"]]: isCollapsed,
+        })}
+        style={{
+          transition: isMobileScreen && isIOSMobile ? "none" : undefined,
+        }}
+        role="navigation"
+        aria-label="侧边栏导航"
       >
-        <DragIcon />
+        {/* 收起按钮 */}
+        <button
+          className={styles["sidebar-collapse-btn"]}
+          onClick={onClose}
+          aria-label="收起侧边栏"
+          type="button"
+        >
+          <ArrowIcon style={{ transform: "rotate(180deg)" }} />
+        </button>
+        {children}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -176,15 +166,12 @@ export function SideBarHeader(props: {
   subTitle?: string | React.ReactNode;
   logo?: React.ReactNode;
   children?: React.ReactNode;
-  shouldNarrow?: boolean;
 }) {
-  const { title, subTitle, logo, children, shouldNarrow } = props;
+  const { title, subTitle, logo, children } = props;
   return (
     <Fragment>
       <div
-        className={clsx(styles["sidebar-header"], {
-          [styles["sidebar-header-narrow"]]: shouldNarrow,
-        })}
+        className={styles["sidebar-header"]}
         data-tauri-drag-region
       >
         <div className={styles["sidebar-title-container"]}>
@@ -226,15 +213,175 @@ export function SideBarTail(props: {
   );
 }
 
+// 展开侧边栏按钮（在顶部导航栏使用）
+export function SideBarToggleButton() {
+  const { isCollapsed, openSidebar } = useSideBarToggle();
+
+  if (!isCollapsed) return null;
+
+  return (
+    <button
+      className={styles["sidebar-toggle-btn"]}
+      onClick={openSidebar}
+      aria-label="展开侧边栏导航"
+      type="button"
+    >
+      <ArrowIcon />
+    </button>
+  );
+}
+
+// 菜单项配置
+interface MenuItem {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  path?: string;
+  action?: () => void;
+  adminOnly?: boolean;
+}
+
+interface MenuGroup {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  items: MenuItem[];
+  defaultExpanded?: boolean;
+}
+
+// 菜单配置
+const MENU_GROUPS: MenuGroup[] = [
+  {
+    id: "navigation",
+    label: "导航",
+    icon: <DiscoveryIcon />,
+    items: [
+      { id: "product-home", icon: <HomeIcon />, label: "产品主页", path: Path.ProductHome },
+      { id: "model-monitor", icon: <DiscoveryIcon />, label: "模型监控", path: Path.Dashboard, adminOnly: true },
+      { id: "realtime-metrics", icon: <ChartIcon />, label: "实时指标", path: Path.Grafana, adminOnly: true },
+      { id: "openclaw", icon: <ClawIcon />, label: "OpenClaw", path: Path.Openclaw },
+      { id: "showcase", icon: <DragIcon />, label: "样机展示", path: Path.Showcase },
+    ],
+    defaultExpanded: true,
+  },
+];
+
+// 菜单分组组件
+function MenuGroupComponent({ group, isAdmin }: { group: MenuGroup; isAdmin: boolean }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const config = useAppConfig();
+  const groupRef = useRef<HTMLDivElement>(null);
+
+  // 检查当前路由是否匹配菜单项
+  const isCurrentRoute = (item: MenuItem) => {
+    if (!item.path) return false;
+    return location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+  };
+
+  // 检查是否有任何菜单项匹配当前路由，如果有则自动展开
+  const hasActiveItem = group.items.some(item => !item.adminOnly || isAdmin ? isCurrentRoute(item) : false);
+
+  const [isExpanded, setIsExpanded] = useState(group.defaultExpanded ?? hasActiveItem);
+
+  const handleItemClick = (item: MenuItem) => {
+    if (item.action === "openclaw") {
+      const targetUrl = normalizeOpenclawUrl(config.openclawConfig?.url ?? DEFAULT_OPENCLAW_URL);
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+    } else if (item.path) {
+      navigate(item.path);
+    }
+  };
+
+  // 键盘导航支持
+  const handleKeyDown = (e: React.KeyboardEvent, item: MenuItem) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleItemClick(item);
+    }
+  };
+
+  // 展开/收起组键盘支持
+  const handleGroupKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      setIsExpanded(!isExpanded);
+    } else if (e.key === 'ArrowDown' && isExpanded) {
+      e.preventDefault();
+      const firstItem = groupRef.current?.querySelector('[data-menu-item]') as HTMLElement;
+      firstItem?.focus();
+    }
+  };
+
+  return (
+    <div
+      className={styles["sidebar-menu-group"]}
+      ref={groupRef}
+      role="menu"
+      aria-label={group.label}
+    >
+      <div
+        className={styles["sidebar-menu-group-header"]}
+        onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={handleGroupKeyDown}
+        role="menuitem"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-controls={`menu-${group.id}`}
+      >
+        <span className={styles["sidebar-menu-group-icon"]}>{group.icon}</span>
+        <span className={styles["sidebar-menu-group-label"]}>{group.label}</span>
+        <ArrowIcon
+          className={clsx(styles["sidebar-menu-group-arrow"], {
+            [styles["expanded"]]: isExpanded,
+          })}
+          aria-hidden="true"
+        />
+      </div>
+      <div
+        id={`menu-${group.id}`}
+        className={clsx(styles["sidebar-menu-group-items"], {
+          [styles["visible"]]: isExpanded,
+        })}
+        role="group"
+      >
+        {group.items
+          .filter(item => !item.adminOnly || isAdmin)
+          .map((item, index) => {
+            const isActive = isCurrentRoute(item);
+            return (
+              <div
+                key={item.id}
+                className={clsx(styles["sidebar-menu-item"], {
+                  [styles["active"]]: isActive,
+                })}
+                onClick={() => handleItemClick(item)}
+                onKeyDown={(e) => handleKeyDown(e, item)}
+                role="menuitem"
+                tabIndex={isExpanded ? 0 : -1}
+                data-menu-item
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span className={styles["sidebar-menu-item-icon"]}>{item.icon}</span>
+                <span className={styles["sidebar-menu-item-label"]}>{item.label}</span>
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
+
 export function SideBar(props: { className?: string }) {
   useHotKey();
-  const { onDragStart, shouldNarrow } = useDragSideBar();
-  const [showDiscoverySelector, setshowDiscoverySelector] = useState(false);
+  const { isCollapsed, closeSidebar } = useSideBarToggle();
   const navigate = useNavigate();
   const config = useAppConfig();
   const chatStore = useChatStore();
   const accessStore = useAccessStore();
   const [mcpEnabled, setMcpEnabled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const isAdmin = accessStore.isAdmin();
 
   const openOpenclaw = () => {
@@ -254,45 +401,40 @@ export function SideBar(props: { className?: string }) {
 
   return (
     <SideBarContainer
-      onDragStart={onDragStart}
-      shouldNarrow={shouldNarrow}
+      isCollapsed={isCollapsed}
+      onClose={closeSidebar}
       {...props}
     >
       <SideBarHeader
         title="普惠 AI 一体机"
         subTitle="您的本地私有化智能助手"
-        logo={<ChatGptIcon />}
-        shouldNarrow={shouldNarrow}
-      >
-        {/* 顶部仅保留基础功能按钮，保持简洁 */}
-        <div className={styles["sidebar-header-bar"]}>
-          {/* <IconButton
-            icon={<MaskIcon />}
-            text={shouldNarrow ? undefined : Locale.Mask.Name}
-            className={styles["sidebar-bar-button"]}
-            onClick={() => navigate(Path.Masks)}
-            shadow  
-          /> */}
-          <IconButton
-            icon={<SettingsIcon />}
-            text={shouldNarrow ? undefined : "设置"}
-            className={styles["sidebar-bar-button"]}
-            onClick={() => navigate(Path.Settings)}
-            shadow
-          />
-        </div>
-      </SideBarHeader>
+        // logo={<CompanyLogo />}
+      />
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          overflow: "hidden",
-        }}
-      >
-        {/* 可滚动聊天列表 */}
-        <div style={{ flex: 1, overflow: "auto" }}>
+      {/* 菜单区域 */}
+      <div className={styles["sidebar-menu-container"]}>
+        {MENU_GROUPS.map(group => (
+          <MenuGroupComponent key={group.id} group={group} isAdmin={isAdmin} />
+        ))}
+
+        {/* 新建对话按钮 */}
+        <div className={styles["sidebar-menu-divider"]} />
+        <div
+          className={styles["sidebar-new-chat-btn"]}
+          onClick={() => {
+            chatStore.newSession();
+            navigate(Path.Chat);
+          }}
+        >
+          <span className={styles["sidebar-menu-item-icon"]}><AddIcon /></span>
+          <span className={styles["sidebar-menu-item-label"]}>新建对话</span>
+        </div>
+      </div>
+
+      {/* 聊天列表区域 */}
+      <div className={styles["sidebar-chat-list-container"]}>
+        <div className={styles["sidebar-chat-list-header"]}>最近会话</div>
+        <div className={styles["sidebar-chat-list-scroll"]}>
           <SideBarBody
             onClick={(e) => {
               if (e.target === e.currentTarget) {
@@ -300,104 +442,85 @@ export function SideBar(props: { className?: string }) {
               }
             }}
           >
-            {/* 聊天列表区 */}
-            <ChatList narrow={shouldNarrow} />
+            <ChatList narrow={false} />
           </SideBarBody>
         </div>
       </div>
 
-      {/* 自定义底部布局，不使用SideBarTail */}
-      <div
-        style={{
-          paddingTop: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          padding: "20px 10px 10px 10px",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        {/* 新建对话按钮 - 独占一行，居中，宽度增加，高度增加，文字加大加粗 */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <IconButton
-            icon={<AddIcon />}
-            text={shouldNarrow ? undefined : "新建对话"}
-            className={styles["sidebar-new-chat-btn"]}
-            onClick={() => {
-              chatStore.newSession();
-              navigate(Path.Chat);
-            }}
-            shadow
-            style={{
-              width: "80%",
-              height: "52px",
-              // fontSize: "20px",
-              // fontWeight: "600",
-              // backgroundColor: "#4f46e5", // 【新增】你的品牌主题蓝色
-              // color: "white", // 【新增】文字和图标变成白色
-            }}
-          />
-        </div>
-
-        {/* 用户信息和登出按钮 - 同一行左右排布，固定宽度 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          {/* 用户信息框 - 固定宽度，居中显示 */}
+      {/* 用户信息和菜单 */}
+      <div className={styles["sidebar-footer"]}>
+        <div className={styles["sidebar-user-section"]}>
           <div
-            style={{
-              background: "white",
-              borderRadius: "10px",
-              padding: "10px 15px",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-              width: "calc(100% - 90px)", // 总宽度减去登出按钮宽度和间距
-              marginRight: "10px",
-              minWidth: 0,
-            }}
+            className={styles["sidebar-user-info"]}
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            tabIndex={0}
+            role="button"
+            aria-expanded={showUserMenu}
+            aria-haspopup="menu"
           >
-            <div
-              style={{
-                fontSize: "14px",
-                fontWeight: "500",
-                color: "var(--text-color-primary)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                textAlign: "center",
-              }}
-            >
-              {accessStore.userSession?.user?.username}
+            <div className={styles["sidebar-user-avatar"]}>
+              <BotIcon />
+            </div>
+            <div className={styles["sidebar-user-text"]}>
+              <div className={styles["sidebar-user-name"]}>
+                {accessStore.userSession?.user?.username}
+              </div>
               {accessStore.userSession?.user?.role === "admin" && (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--primary)",
-                    marginLeft: "4px",
-                  }}
-                >
-                  管理员
-                </span>
+                <div className={styles["sidebar-user-role"]}>管理员</div>
               )}
             </div>
           </div>
 
-          {/* 登出按钮 - 靠右对齐，固定宽度 */}
-          <IconButton
-            icon={<SettingsIcon />}
-            text={shouldNarrow ? undefined : "登出"}
-            onClick={() => {
-              accessStore.logout();
-              navigate(Path.Auth);
-            }}
-            shadow
-            style={{ width: "80px", flexShrink: 0 }}
-          />
+          {showUserMenu && (
+            <>
+              <div
+                className={styles["sidebar-user-mask"]}
+                onClick={() => setShowUserMenu(false)}
+              />
+              <div className={styles["sidebar-user-menu"]} role="menu">
+                <div
+                  className={styles["sidebar-user-menu-item"]}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    navigate(Path.Settings);
+                  }}
+                  role="menuitem"
+                  tabIndex={0}
+                >
+                  <SettingsIcon />
+                  <span>设置</span>
+                </div>
+                {isAdmin && (
+                  <div
+                    className={styles["sidebar-user-menu-item"]}
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      navigate(Path.UserManagement);
+                    }}
+                    role="menuitem"
+                    tabIndex={0}
+                  >
+                    <UserIcon />
+                    <span>用户管理</span>
+                  </div>
+                )}
+                <div className={styles["sidebar-menu-divider-line"]} />
+                <div
+                  className={clsx(styles["sidebar-user-menu-item"], styles.danger)}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    accessStore.logout();
+                    navigate(Path.Auth);
+                  }}
+                  role="menuitem"
+                  tabIndex={0}
+                >
+                  <LogoutIcon />
+                  <span>退出登录</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </SideBarContainer>
