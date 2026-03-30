@@ -1,3 +1,25 @@
+// =========================================
+// 设计系统变量
+// =========================================
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 24px;
+$spacing-2xl: 32px;
+
+// 统一高度标准 (触摸友好 44-48px)
+$touch-height: 44px;
+$item-height: 44px;
+
+// 侧边栏宽度
+$sidebar-collapsed-width: 72px;
+
+// 主色调
+$primary: #3b82f6;
+$primary-dark: #2563eb;
+$primary-light: #60a5fa;
+
 @mixin container {
   background-color: var(--white);
   border: var(--border-in-light);
@@ -37,51 +59,205 @@
   }
 }
 
+// =========================================
+// 侧边栏主容器
+// =========================================
 .sidebar {
   top: 0;
   left: 0;
   width: var(--sidebar-width);
   box-sizing: border-box;
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: $spacing-lg;
+  padding-top: $spacing-xl;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
   position: fixed;
   height: 100vh;
   z-index: 1001;
-  transition: width ease 0.3s;
-  border-right: 1px solid #bfdbfe;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+}
 
-  .sidebar-header-bar {
+// =========================================
+// 侧边栏收起状态
+// =========================================
+.sidebar-collapsed {
+  width: $sidebar-collapsed-width;
+  padding: $spacing-md;
+  padding-top: $spacing-lg;
+
+  .sidebar-title-container,
+  .sidebar-menu-item-label,
+  .sidebar-chat-list-container,
+  .sidebar-section-divider,
+  .sidebar-user-text {
+    display: none;
+  }
+
+  .sidebar-header {
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    padding-bottom: $spacing-lg;
+  }
+
+  .sidebar-header-main {
+    justify-content: center;
+  }
+
+  .sidebar-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  // 用户区域固定在底部 - 头像保持圆形
+  .sidebar-footer {
+    margin-top: auto;
+    padding: $spacing-md;
+  }
+
+  .sidebar-user-info {
+    justify-content: center;
+    padding: $spacing-sm;
+  }
+
+  .sidebar-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+}
+
+// =========================================
+// 收起状态下的统一按钮容器
+// =========================================
+.sidebar-collapsed-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 0;
+
+  // 统一所有按钮样式 - 完全一致
+  .sidebar-menu-item,
+  .sidebar-toggle-btn,
+  .sidebar-new-chat-btn {
     display: flex;
-    margin-bottom: 24px;
-    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: transparent;
+    color: #4b5563;
 
-    .sidebar-bar-button {
-      flex-grow: 1;
-      transition: all 0.3s ease;
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      
-      &:hover {
-        background: #f1f5f9;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover {
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+
+    &:active {
+      transform: scale(0.96);
     }
   }
 
-  &:hover,
-  &:active {
-    .sidebar-drag {
-      background-color: rgba($color: #000000, $alpha: 0.01);
+  // 激活状态
+  .sidebar-menu-item.active {
+    background: #eff6ff;
+    color: #2563eb;
 
-      svg {
-        opacity: 0.2;
-      }
+    &::before {
+      display: none;
     }
+  }
+
+  // 展开按钮颜色稍浅
+  .sidebar-toggle-btn {
+    color: #94a3b8;
+
+    &:hover {
+      color: #64748b;
+    }
+  }
+}
+
+// 收起按钮（在侧边栏内部）
+.sidebar-collapse-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: #f3f4f6;
+    color: #64748b;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}
+
+// 展开按钮（收起状态下显示）
+.sidebar-toggle-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: #f3f4f6;
+    color: #3b82f6;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
   }
 }
 
@@ -107,9 +283,8 @@
 
 .window-content {
   margin-left: var(--sidebar-width);
-  margin-top: 64px;
   width: calc(100% - var(--sidebar-width));
-  height: calc(100vh - 64px);
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -148,27 +323,37 @@
 
 .sidebar-header {
   position: relative;
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding: $spacing-lg 0;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-md;
+}
+
+.sidebar-header-main {
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  &-narrow {
-    justify-content: center;
-  }
+  gap: $spacing-md;
+  flex: 1;
 }
 
 .sidebar-logo {
-  display: inline-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
 }
-  
+
 .sidebar-title-container {
   position: relative;
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 56px;
-  overflow: hidden;
+  padding-left: $spacing-sm;
 }
 
 .sidebar-title-content {
@@ -190,25 +375,24 @@
     max-width: 100%;
     height: auto;
   }
-} 
+}
 
 .sidebar-title {
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
-  letter-spacing: 1px;
-  animation: slide-in ease 0.3s;
-  color: #1e40af;
-  text-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-} 
+  letter-spacing: 0.02em;
+  color: #1f2937;
+  line-height: 1.3;
+}
 
 .sidebar-sub-title {
-  font-size: 16px;
+  font-size: 12px;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-  color: #3b82f6; 
-  margin-top: 6px;
-  font-weight: 500;
-  animation: slide-in ease 0.3s;
+  color: #6b7280;
+  margin-top: 2px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .sidebar-body {
@@ -218,73 +402,72 @@
 }
 
 .chat-item {
-  padding: 16px 18px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
-  transition: all 0.3s ease;
+  padding: 12px 14px;
+  background: transparent;
+  border-radius: 8px;
+  margin-bottom: 2px;
+  transition: background 0.15s ease;
   cursor: pointer;
   user-select: none;
-  border: 2px solid #e0f2fe;
+  border: none;
   position: relative;
   content-visibility: auto;
 }
 
 .chat-item:hover {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.18);
-  border-color: #bfdbfe;
+  background: #f3f4f6;
 }
 
 .chat-item-selected {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  background: #eff6ff;
 }
 
 .chat-item-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   display: block;
   width: calc(100% - 20px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: slide-in ease 0.3s;
-  color: #1e40af;
+  color: #1f2937;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.4;
+}
+
+.chat-item-selected .chat-item-title {
+  color: #1d4ed8;
+  font-weight: 500;
 }
 
 .chat-item-delete {
   position: absolute;
-  top: 8px;
+  top: 50%;
   right: 8px;
-  transition: all ease 0.3s;
+  transform: translateY(-50%);
+  transition: opacity 0.15s ease;
   opacity: 0;
   cursor: pointer;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 6px;
+  background: transparent;
+  border-radius: 4px;
   padding: 4px;
+  color: #9ca3af;
 }
 
 .chat-item:hover > .chat-item-delete {
   opacity: 1;
-  transform: translateX(0);
 }
 
 .chat-item:hover > .chat-item-delete:hover {
-  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 .chat-item-info {
   display: flex;
   justify-content: space-between;
-  color: #94a3b8;
-  font-size: 13px;
-  margin-top: 10px;
-  animation: slide-in ease 0.3s;
+  color: #9ca3af;
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 .chat-item-count,
@@ -503,9 +686,8 @@
 
 .window-content {
   margin-left: var(--sidebar-width);
-  margin-top: 64px;
   width: calc(100% - var(--sidebar-width));
-  height: calc(100vh - 64px);
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -530,36 +712,324 @@
   }
 }
 
-/* =========================================
-   侧边栏“新建对话”高亮大按钮专属样式
-   ========================================= */
-.sidebar-new-chat-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important; /* 醒目的渐变科技蓝背景 */
-  border-radius: 14px !important;
-  border: none !important;
-  margin: 0 16px 20px 16px !important; /* 调整一下外边距，让它四周有呼吸感 */
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important; /* 默认带一点蓝色发光阴影 */
+// =========================================
+// 侧边栏区域划分
+// =========================================
 
-  /* 核心：穿透修改内部的文字字号和颜色 */
-  * {
-    font-size: 18px !important; /* 增大的字号 */
-    font-weight: bold !important; /* 字体加粗 */
-    color: white !important; /* 文字变成纯白 */
-    letter-spacing: 1px !important; /* 字间距拉开一点更高级 */
-  }
+// 主导航区域
+.sidebar-nav-section {
+  display: flex;
+  flex-direction: column;
+  padding: 0 $spacing-sm;
+  gap: $spacing-xs;
+}
 
-  /* 核心：穿透修改内部的加号图标 */
-  svg {
-    fill: white !important;
-    color: white !important;
-    width: 22px !important; /* 放大图标 */
-    height: 22px !important;
-  }
+// 分隔线
+.sidebar-section-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: $spacing-lg $spacing-md;
+}
 
-  /* 鼠标悬停时的华丽浮动反馈 */
+// 操作区域（新建对话）
+.sidebar-action-section {
+  display: flex;
+  flex-direction: column;
+  padding: 0 $spacing-sm;
+}
+
+// =========================================
+// 菜单项样式
+// =========================================
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: 0 $spacing-lg;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  height: $item-height;
+  position: relative;
+
   &:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5) !important; /* 阴影变大变亮 */
-    filter: brightness(1.1); /* 整体变亮一点点 */
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.active {
+    background: #eff6ff;
+    color: $primary-dark;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: $primary;
+      border-radius: 0 2px 2px 0;
+    }
+  }
+}
+
+.sidebar-menu-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.sidebar-menu-item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// =========================================
+// 新建对话按钮 - 与菜单项完全一致的样式
+// =========================================
+.sidebar-new-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: 0 $spacing-lg;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
+  height: $item-height;
+  position: relative;
+  // 与菜单项完全一致的默认样式
+  background: transparent;
+  color: #4b5563;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// =========================================
+// 聊天列表区域
+// =========================================
+.sidebar-chat-list-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: $spacing-md;
+}
+
+.sidebar-chat-list-header {
+  padding: $spacing-sm $spacing-lg;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-chat-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+// =========================================
+// 用户区域
+// =========================================
+.sidebar-footer {
+  padding: $spacing-md;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.sidebar-user-section {
+  position: relative;
+}
+
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  border-radius: $spacing-md;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f8fafc;
+  }
+}
+
+/* 用户头像 */
+.sidebar-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+
+  svg,
+  img {
+    display: none;
+  }
+}
+
+.sidebar-user-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font-size: 12px;
+  color: #3b82f6;
+  margin-top: 2px;
+}
+
+.sidebar-user-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1099;
+  background: transparent;
+}
+
+.sidebar-user-menu {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 -4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 -10px 24px -4px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  padding: $spacing-sm;
+  z-index: 1100;
+  animation: menu-slide-up 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+// 收起状态下的用户菜单 - 宽度自适应
+.sidebar-user-menu-collapsed {
+  width: max-content;
+  min-width: 140px;
+}
+
+.sidebar-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  height: $item-height;
+  width: 100%;
+  box-sizing: border-box;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+
+    svg {
+      opacity: 1;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.danger {
+    color: #dc2626;
+
+    svg {
+      opacity: 0.8;
+    }
+
+    &:hover {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    &:focus-visible {
+      outline-color: #dc2626;
+    }
+  }
+}
+
+.sidebar-menu-divider-line {
+  height: 1px;
+  background: #e5e7eb;
+  margin: $spacing-xs $spacing-sm;
+}
+
+@keyframes menu-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

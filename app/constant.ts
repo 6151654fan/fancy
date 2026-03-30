@@ -62,6 +62,7 @@ export enum Path {
   SearchChat = "/search-chat",
   McpMarket = "/mcp-market",
   UserManagement = "/user-management",
+  Openclaw = "/openclaw",
 }
 
 export enum ApiPath {

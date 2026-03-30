@@ -1,4 +1,5 @@
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import styles from "./home.module.scss";
 
@@ -12,6 +13,7 @@ import ClawIcon from "../icons/openclaw.svg";
 import DragIcon from "../icons/drag.svg";
 import HomeIcon from "../icons/home.svg";
 import ChartIcon from "../icons/chart.svg";
+import ShowcaseIcon from "../icons/showcase.svg";
 import UserIcon from "../icons/user.svg";
 import LogoutIcon from "../icons/logout.svg";
 
@@ -39,12 +41,6 @@ function normalizeOpenclawUrl(url: string) {
   return `http://${trimmed}`;
 }
 
-const DISCOVERY = [
-  { name: Locale.Plugin.Name, path: Path.Plugins },
-  { name: "Stable Diffusion", path: Path.Sd },
-  { name: Locale.SearchChat.Page.Title, path: Path.SearchChat },
-];
-
 const ChatList = dynamic(async () => (await import("./chat-list")).ChatList, {
   loading: () => null,
 });
@@ -68,12 +64,10 @@ export function useHotKey() {
   });
 }
 
-// 简化的侧边栏状态管理
+// 侧边栏状态管理
 export function useSideBarToggle() {
   const config = useAppConfig();
   const isMobileScreen = useMobileScreen();
-
-  // 使用 sidebarCollapsed 配置项（需要添加到 config 中）
   const isCollapsed = config.sidebarCollapsed ?? false;
 
   const toggleSidebar = () => {
@@ -95,10 +89,12 @@ export function useSideBarToggle() {
   };
 
   useEffect(() => {
+    // 收起时显示窄栏（72px），确保触摸友好
+    const collapsedWidth = "72px";
     const sideBarWidth = isMobileScreen
       ? "100vw"
       : isCollapsed
-        ? "0px"
+        ? collapsedWidth
         : `${DEFAULT_SIDEBAR_WIDTH}px`;
     document.documentElement.style.setProperty("--sidebar-width", sideBarWidth);
   }, [isCollapsed, isMobileScreen]);
@@ -126,7 +122,6 @@ export function SideBarContainer(props: {
 
   return (
     <>
-      {/* 移动端遮罩层 */}
       {isMobileScreen && !isCollapsed && (
         <div
           className={clsx(styles["sidebar-overlay"], {
@@ -146,15 +141,6 @@ export function SideBarContainer(props: {
         role="navigation"
         aria-label="侧边栏导航"
       >
-        {/* 收起按钮 */}
-        <button
-          className={styles["sidebar-collapse-btn"]}
-          onClick={onClose}
-          aria-label="收起侧边栏"
-          type="button"
-        >
-          <ArrowIcon style={{ transform: "rotate(180deg)" }} />
-        </button>
         {children}
       </div>
     </>
@@ -166,21 +152,34 @@ export function SideBarHeader(props: {
   subTitle?: string | React.ReactNode;
   logo?: React.ReactNode;
   children?: React.ReactNode;
+  onCollapse?: () => void;
+  isCollapsed?: boolean;
 }) {
-  const { title, subTitle, logo, children } = props;
+  const { title, subTitle, logo, children, onCollapse, isCollapsed } = props;
   return (
     <Fragment>
-      <div
-        className={styles["sidebar-header"]}
-        data-tauri-drag-region
-      >
-        <div className={styles["sidebar-title-container"]}>
-          <div className={styles["sidebar-title"]} data-tauri-drag-region>
-            {title}
-          </div>
-          <div className={styles["sidebar-sub-title"]}>{subTitle}</div>
+      <div className={styles["sidebar-header"]} data-tauri-drag-region>
+        <div className={styles["sidebar-header-main"]} data-tauri-drag-region>
+          <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+          {!isCollapsed && (
+            <div className={styles["sidebar-title-container"]}>
+              <div className={styles["sidebar-title"]} data-tauri-drag-region>
+                {title}
+              </div>
+              <div className={styles["sidebar-sub-title"]}>{subTitle}</div>
+            </div>
+          )}
         </div>
-        <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+        {!isCollapsed && onCollapse && (
+          <button
+            className={styles["sidebar-collapse-btn"]}
+            onClick={onCollapse}
+            aria-label="收起侧边栏"
+            type="button"
+          >
+            <ArrowIcon style={{ transform: "rotate(180deg)" }} />
+          </button>
+        )}
       </div>
       {children}
     </Fragment>
@@ -199,176 +198,85 @@ export function SideBarBody(props: {
   );
 }
 
-export function SideBarTail(props: {
-  primaryAction?: React.ReactNode;
-  secondaryAction?: React.ReactNode;
-}) {
-  const { primaryAction, secondaryAction } = props;
-
-  return (
-    <div className={styles["sidebar-tail"]}>
-      <div className={styles["sidebar-actions"]}>{primaryAction}</div>
-      <div className={styles["sidebar-actions"]}>{secondaryAction}</div>
-    </div>
-  );
-}
-
-// 展开侧边栏按钮（在顶部导航栏使用）
-export function SideBarToggleButton() {
-  const { isCollapsed, openSidebar } = useSideBarToggle();
-
-  if (!isCollapsed) return null;
-
-  return (
-    <button
-      className={styles["sidebar-toggle-btn"]}
-      onClick={openSidebar}
-      aria-label="展开侧边栏导航"
-      type="button"
-    >
-      <ArrowIcon />
-    </button>
-  );
-}
-
 // 菜单项配置
 interface MenuItem {
   id: string;
   icon: React.ReactNode;
   label: string;
   path?: string;
-  action?: () => void;
   adminOnly?: boolean;
 }
 
-interface MenuGroup {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  items: MenuItem[];
-  defaultExpanded?: boolean;
-}
-
-// 菜单配置
-const MENU_GROUPS: MenuGroup[] = [
-  {
-    id: "navigation",
-    label: "导航",
-    icon: <DiscoveryIcon />,
-    items: [
-      { id: "product-home", icon: <HomeIcon />, label: "产品主页", path: Path.ProductHome },
-      { id: "model-monitor", icon: <DiscoveryIcon />, label: "模型监控", path: Path.Dashboard, adminOnly: true },
-      { id: "realtime-metrics", icon: <ChartIcon />, label: "实时指标", path: Path.Grafana, adminOnly: true },
-      { id: "openclaw", icon: <ClawIcon />, label: "OpenClaw", path: Path.Openclaw },
-      { id: "showcase", icon: <DragIcon />, label: "样机展示", path: Path.Showcase },
-    ],
-    defaultExpanded: true,
-  },
+// 主导航菜单
+const MENU_ITEMS: MenuItem[] = [
+  { id: "product-home", icon: <HomeIcon />, label: "产品主页", path: Path.ProductHome },
+  { id: "model-monitor", icon: <DiscoveryIcon />, label: "模型监控", path: Path.Dashboard, adminOnly: true },
+  { id: "realtime-metrics", icon: <ChartIcon />, label: "实时指标", path: Path.Grafana, adminOnly: true },
+  { id: "showcase", icon: <ShowcaseIcon />, label: "样机展示", path: Path.Showcase },
+  { id: "openclaw", icon: <ClawIcon />, label: "OpenClaw", path: Path.Openclaw },
 ];
 
-// 菜单分组组件
-function MenuGroupComponent({ group, isAdmin }: { group: MenuGroup; isAdmin: boolean }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const config = useAppConfig();
-  const groupRef = useRef<HTMLDivElement>(null);
-
-  // 检查当前路由是否匹配菜单项
-  const isCurrentRoute = (item: MenuItem) => {
-    if (!item.path) return false;
-    return location.pathname === item.path || location.pathname.startsWith(item.path + '/');
-  };
-
-  // 检查是否有任何菜单项匹配当前路由，如果有则自动展开
-  const hasActiveItem = group.items.some(item => !item.adminOnly || isAdmin ? isCurrentRoute(item) : false);
-
-  const [isExpanded, setIsExpanded] = useState(group.defaultExpanded ?? hasActiveItem);
-
-  const handleItemClick = (item: MenuItem) => {
-    if (item.action === "openclaw") {
-      const targetUrl = normalizeOpenclawUrl(config.openclawConfig?.url ?? DEFAULT_OPENCLAW_URL);
-      window.open(targetUrl, "_blank", "noopener,noreferrer");
-    } else if (item.path) {
-      navigate(item.path);
-    }
-  };
-
-  // 键盘导航支持
-  const handleKeyDown = (e: React.KeyboardEvent, item: MenuItem) => {
+// 菜单项组件
+function MenuItemComponent({
+  item,
+  isActive,
+  onClick,
+  isCollapsed
+}: {
+  item: MenuItem;
+  isActive: boolean;
+  onClick: () => void;
+  isCollapsed?: boolean;
+}) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      handleItemClick(item);
-    }
-  };
-
-  // 展开/收起组键盘支持
-  const handleGroupKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      setIsExpanded(!isExpanded);
-    } else if (e.key === 'ArrowDown' && isExpanded) {
-      e.preventDefault();
-      const firstItem = groupRef.current?.querySelector('[data-menu-item]') as HTMLElement;
-      firstItem?.focus();
+      onClick();
     }
   };
 
   return (
     <div
-      className={styles["sidebar-menu-group"]}
-      ref={groupRef}
-      role="menu"
-      aria-label={group.label}
+      className={clsx(styles["sidebar-menu-item"], {
+        [styles["active"]]: isActive,
+      })}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="menuitem"
+      tabIndex={0}
+      aria-label={item.label}
+      aria-current={isActive ? 'page' : undefined}
+      title={isCollapsed ? item.label : undefined}
     >
-      <div
-        className={styles["sidebar-menu-group-header"]}
-        onClick={() => setIsExpanded(!isExpanded)}
-        onKeyDown={handleGroupKeyDown}
-        role="menuitem"
-        tabIndex={0}
-        aria-expanded={isExpanded}
-        aria-controls={`menu-${group.id}`}
-      >
-        <span className={styles["sidebar-menu-group-icon"]}>{group.icon}</span>
-        <span className={styles["sidebar-menu-group-label"]}>{group.label}</span>
-        <ArrowIcon
-          className={clsx(styles["sidebar-menu-group-arrow"], {
-            [styles["expanded"]]: isExpanded,
-          })}
-          aria-hidden="true"
-        />
-      </div>
-      <div
-        id={`menu-${group.id}`}
-        className={clsx(styles["sidebar-menu-group-items"], {
-          [styles["visible"]]: isExpanded,
-        })}
-        role="group"
-      >
-        {group.items
-          .filter(item => !item.adminOnly || isAdmin)
-          .map((item, index) => {
-            const isActive = isCurrentRoute(item);
-            return (
-              <div
-                key={item.id}
-                className={clsx(styles["sidebar-menu-item"], {
-                  [styles["active"]]: isActive,
-                })}
-                onClick={() => handleItemClick(item)}
-                onKeyDown={(e) => handleKeyDown(e, item)}
-                role="menuitem"
-                tabIndex={isExpanded ? 0 : -1}
-                data-menu-item
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <span className={styles["sidebar-menu-item-icon"]}>{item.icon}</span>
-                <span className={styles["sidebar-menu-item-label"]}>{item.label}</span>
-              </div>
-            );
-          })}
-      </div>
+      <span className={styles["sidebar-menu-item-icon"]}>{item.icon}</span>
+      {!isCollapsed && (
+        <span className={styles["sidebar-menu-item-label"]}>{item.label}</span>
+      )}
+    </div>
+  );
+}
+
+// 新建对话按钮组件 - 与菜单项结构一致
+function NewChatButton({
+  isCollapsed,
+  onClick
+}: {
+  isCollapsed: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className={styles["sidebar-new-chat-btn"]}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label="新建对话"
+      title={isCollapsed ? "新建对话" : undefined}
+    >
+      <span className={styles["sidebar-menu-item-icon"]}><AddIcon /></span>
+      {!isCollapsed && (
+        <span className={styles["sidebar-menu-item-label"]}>新建对话</span>
+      )}
     </div>
   );
 }
@@ -377,27 +285,57 @@ export function SideBar(props: { className?: string }) {
   useHotKey();
   const { isCollapsed, closeSidebar } = useSideBarToggle();
   const navigate = useNavigate();
+  const location = useLocation();
   const config = useAppConfig();
   const chatStore = useChatStore();
   const accessStore = useAccessStore();
-  const [mcpEnabled, setMcpEnabled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const userSectionRef = useRef<HTMLDivElement>(null);
   const isAdmin = accessStore.isAdmin();
 
-  const openOpenclaw = () => {
-    const targetUrl = normalizeOpenclawUrl(
-      config.openclawConfig?.url ?? DEFAULT_OPENCLAW_URL,
-    );
-    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  // 计算菜单位置
+  useEffect(() => {
+    if (showUserMenu && userSectionRef.current) {
+      const rect = userSectionRef.current.getBoundingClientRect();
+      if (isCollapsed) {
+        // 收起状态：菜单左侧对齐侧边栏左边缘，避免溢出屏幕
+        const sidebarWidth = 72; // 收起状态侧边栏宽度
+        const menuWidth = 140; // 菜单最小宽度
+        setMenuStyle({
+          position: 'fixed',
+          bottom: window.innerHeight - rect.top + 8,
+          left: Math.max(8, (sidebarWidth - menuWidth) / 2),
+          width: 'max-content',
+          minWidth: '140px',
+        });
+      } else {
+        // 展开状态：菜单左对齐显示在用户区域上方
+        setMenuStyle({
+          position: 'fixed',
+          bottom: window.innerHeight - rect.top + 8,
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    }
+  }, [showUserMenu, isCollapsed]);
+
+  const isCurrentRoute = (item: MenuItem) => {
+    if (!item.path) return false;
+    return location.pathname === item.path || location.pathname.startsWith(item.path + '/');
   };
 
-  useEffect(() => {
-    const checkMcpStatus = async () => {
-      const enabled = await isMcpEnabled();
-      setMcpEnabled(enabled);
-    };
-    checkMcpStatus();
-  }, []);
+  const handleMenuItemClick = (item: MenuItem) => {
+    if (item.path) {
+      navigate(item.path);
+    }
+  };
+
+  const handleNewChat = () => {
+    chatStore.newSession();
+    navigate(Path.Chat);
+  };
 
   return (
     <SideBarContainer
@@ -405,50 +343,90 @@ export function SideBar(props: { className?: string }) {
       onClose={closeSidebar}
       {...props}
     >
+      {/* 头部区域 */}
       <SideBarHeader
-        title="普惠 AI 一体机"
-        subTitle="您的本地私有化智能助手"
-        // logo={<CompanyLogo />}
+        title={isCollapsed ? undefined : "普惠AI一体机"}
+        subTitle={isCollapsed ? undefined : "本地私有化智能助手"}
+        onCollapse={closeSidebar}
+        isCollapsed={isCollapsed}
       />
 
-      {/* 菜单区域 */}
-      <div className={styles["sidebar-menu-container"]}>
-        {MENU_GROUPS.map(group => (
-          <MenuGroupComponent key={group.id} group={group} isAdmin={isAdmin} />
-        ))}
-
-        {/* 新建对话按钮 */}
-        <div className={styles["sidebar-menu-divider"]} />
-        <div
-          className={styles["sidebar-new-chat-btn"]}
-          onClick={() => {
-            chatStore.newSession();
-            navigate(Path.Chat);
-          }}
-        >
-          <span className={styles["sidebar-menu-item-icon"]}><AddIcon /></span>
-          <span className={styles["sidebar-menu-item-label"]}>新建对话</span>
-        </div>
-      </div>
-
-      {/* 聊天列表区域 */}
-      <div className={styles["sidebar-chat-list-container"]}>
-        <div className={styles["sidebar-chat-list-header"]}>最近会话</div>
-        <div className={styles["sidebar-chat-list-scroll"]}>
-          <SideBarBody
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                navigate(Path.Home);
-              }
-            }}
+      {/* 收起状态下：统一按钮容器 */}
+      {isCollapsed ? (
+        <div className={styles["sidebar-collapsed-buttons"]}>
+          {/* 展开按钮 */}
+          <button
+            className={styles["sidebar-toggle-btn"]}
+            onClick={() => config.update((c) => { c.sidebarCollapsed = false; })}
+            aria-label="展开侧边栏"
+            type="button"
           >
-            <ChatList narrow={false} />
-          </SideBarBody>
+            <ArrowIcon />
+          </button>
+
+          {/* 菜单项 */}
+          {MENU_ITEMS
+            .filter(item => !item.adminOnly || isAdmin)
+            .map(item => (
+              <MenuItemComponent
+                key={item.id}
+                item={item}
+                isActive={isCurrentRoute(item)}
+                onClick={() => handleMenuItemClick(item)}
+                isCollapsed={isCollapsed}
+              />
+            ))}
+
+          {/* 新建对话按钮 */}
+          <NewChatButton isCollapsed={isCollapsed} onClick={handleNewChat} />
         </div>
-      </div>
+      ) : (
+        <>
+          {/* 展开状态：主导航菜单 */}
+          <div className={styles["sidebar-nav-section"]}>
+            {MENU_ITEMS
+              .filter(item => !item.adminOnly || isAdmin)
+              .map(item => (
+                <MenuItemComponent
+                  key={item.id}
+                  item={item}
+                  isActive={isCurrentRoute(item)}
+                  onClick={() => handleMenuItemClick(item)}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+          </div>
+
+          {/* 分隔线 */}
+          <div className={styles["sidebar-section-divider"]} />
+
+          {/* 新建对话按钮 */}
+          <div className={styles["sidebar-action-section"]}>
+            <NewChatButton isCollapsed={isCollapsed} onClick={handleNewChat} />
+          </div>
+        </>
+      )}
+
+      {/* 聊天列表区域 - 仅展开状态显示 */}
+      {!isCollapsed && (
+        <div className={styles["sidebar-chat-list-container"]}>
+          <div className={styles["sidebar-chat-list-header"]}>最近会话</div>
+          <div className={styles["sidebar-chat-list-scroll"]}>
+            <SideBarBody
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  navigate(Path.Home);
+                }
+              }}
+            >
+              <ChatList narrow={false} />
+            </SideBarBody>
+          </div>
+        </div>
+      )}
 
       {/* 用户信息和菜单 */}
-      <div className={styles["sidebar-footer"]}>
+      <div className={styles["sidebar-footer"]} ref={userSectionRef}>
         <div className={styles["sidebar-user-section"]}>
           <div
             className={styles["sidebar-user-info"]}
@@ -461,23 +439,31 @@ export function SideBar(props: { className?: string }) {
             <div className={styles["sidebar-user-avatar"]}>
               <BotIcon />
             </div>
-            <div className={styles["sidebar-user-text"]}>
-              <div className={styles["sidebar-user-name"]}>
-                {accessStore.userSession?.user?.username}
+            {!isCollapsed && (
+              <div className={styles["sidebar-user-text"]}>
+                <div className={styles["sidebar-user-name"]}>
+                  {accessStore.userSession?.user?.username}
+                </div>
+                {accessStore.userSession?.user?.role === "admin" && (
+                  <div className={styles["sidebar-user-role"]}>管理员</div>
+                )}
               </div>
-              {accessStore.userSession?.user?.role === "admin" && (
-                <div className={styles["sidebar-user-role"]}>管理员</div>
-              )}
-            </div>
+            )}
           </div>
 
-          {showUserMenu && (
+          {showUserMenu && createPortal(
             <>
               <div
                 className={styles["sidebar-user-mask"]}
                 onClick={() => setShowUserMenu(false)}
               />
-              <div className={styles["sidebar-user-menu"]} role="menu">
+              <div
+                className={clsx(styles["sidebar-user-menu"], {
+                  [styles["sidebar-user-menu-collapsed"]]: isCollapsed
+                })}
+                style={menuStyle}
+                role="menu"
+              >
                 <div
                   className={styles["sidebar-user-menu-item"]}
                   onClick={() => {
@@ -519,7 +505,8 @@ export function SideBar(props: { className?: string }) {
                   <span>退出登录</span>
                 </div>
               </div>
-            </>
+            </>,
+            document.body
           )}
         </div>
       </div>
