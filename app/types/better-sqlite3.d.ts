@@ -4,6 +4,7 @@ declare module "better-sqlite3" {
     exec(sql: string): void;
     prepare(sql: string): Statement;
     transaction<T>(callback: () => T): T;
+    pragma(sql: string): any;
   }
 
   class Statement {
