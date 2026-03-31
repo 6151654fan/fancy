@@ -68,11 +68,7 @@ export function SideBar(props: { className?: string }) {
   };
 
   return (
-    <SideBarContainer
-      onDragStart={onDragStart}
-      shouldNarrow={shouldNarrow}
-      {...props}
-    >
+    <SideBarContainer isCollapsed={false} {...props}>
       {isMobileScreen ? (
         <div
           className="window-header"

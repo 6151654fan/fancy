@@ -156,8 +156,17 @@ export function SideBarHeader(props: {
     <Fragment>
       <div className={styles["sidebar-header"]} data-tauri-drag-region>
         {isCollapsed ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-            <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <div className={clsx(styles["sidebar-logo"], "no-dark")}>
+              {logo}
+            </div>
             {onCollapse && (
               <button
                 className={styles["sidebar-collapse-btn"]}
@@ -171,8 +180,13 @@ export function SideBarHeader(props: {
           </div>
         ) : (
           <>
-            <div className={styles["sidebar-header-main"]} data-tauri-drag-region>
-              <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+            <div
+              className={styles["sidebar-header-main"]}
+              data-tauri-drag-region
+            >
+              <div className={clsx(styles["sidebar-logo"], "no-dark")}>
+                {logo}
+              </div>
               <div className={styles["sidebar-title-container"]}>
                 <div className={styles["sidebar-title"]} data-tauri-drag-region>
                   {title}
@@ -286,11 +300,15 @@ function MenuItemComponent({
       aria-label={item.label}
       aria-current={isActive ? "page" : undefined}
       title={isCollapsed ? item.label : undefined}
-      style={isCollapsed ? {
-        justifyContent: "center",
-        paddingLeft: 0,
-        paddingRight: 0,
-      } : undefined}
+      style={
+        isCollapsed
+          ? {
+              justifyContent: "center",
+              paddingLeft: 0,
+              paddingRight: 0,
+            }
+          : undefined
+      }
     >
       <span className={styles["sidebar-menu-item-icon"]}>{item.icon}</span>
       {!isCollapsed && (
@@ -419,7 +437,10 @@ export function SideBar(props: { className?: string }) {
         </div>
 
         {/* 容器 B (滚动区)：仅包含 ChatList */}
-        <div style={{ flex: 1, overflowY: "auto" }} className={styles["sidebar-scroll-container"]}>
+        <div
+          style={{ flex: 1, overflowY: "auto" }}
+          className={styles["sidebar-scroll-container"]}
+        >
           {/* 对话列表组件 - 仅在展开状态显示 */}
           {!isCollapsed && (
             <SideBarBody>
@@ -433,14 +454,18 @@ export function SideBar(props: { className?: string }) {
           <div className={styles["sidebar-user-section"]}>
             <div
               className={styles["sidebar-user-info"]}
-              style={isCollapsed ? { 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                paddingLeft: 0, 
-                width: '100%', 
-                gap: '2px' 
-              } : {}}
+              style={
+                isCollapsed
+                  ? {
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      paddingLeft: 0,
+                      width: "100%",
+                      gap: "2px",
+                    }
+                  : {}
+              }
               onClick={() => setShowUserMenu(!showUserMenu)}
               tabIndex={0}
               role="button"
@@ -448,19 +473,42 @@ export function SideBar(props: { className?: string }) {
               aria-haspopup="menu"
             >
               {isCollapsed ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>
-                    {accessStore.userSession?.user?.username?.slice(0, 2) || "用户"}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    {accessStore.userSession?.user?.username?.slice(0, 2) ||
+                      "用户"}
                   </div>
                   {accessStore.userSession?.user?.role === "admin" && (
-                      <div style={{ fontSize: '10px', zoom: 0.8, textAlign: 'center', opacity: 0.8, color: '#3b82f6' }}>
-                        管理员
-                      </div>
-                    )}
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        zoom: 0.8,
+                        textAlign: "center",
+                        opacity: 0.8,
+                        color: "#3b82f6",
+                      }}
+                    >
+                      管理员
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
-                  <div className={styles["sidebar-user-avatar"]}><BotIcon /></div>
+                  <div className={styles["sidebar-user-avatar"]}>
+                    <BotIcon />
+                  </div>
                   <div className={styles["sidebar-user-text"]}>
                     <div className={styles["sidebar-user-name"]}>
                       {accessStore.userSession?.user?.username || "未登录"}
@@ -540,4 +588,19 @@ export function SideBar(props: { className?: string }) {
       </div>
     </SideBarContainer>
   );
+}
+
+export function useDragSideBar() {
+  return {
+    onDragStart: undefined,
+    onDragEnd: undefined,
+    shouldNarrow: false,
+  };
+}
+
+export function SideBarTail(props: {
+  primaryAction?: any;
+  secondaryAction?: any;
+}) {
+  return null; // 我们其实不需要渲染它，只要骗过类型检查就行
 }

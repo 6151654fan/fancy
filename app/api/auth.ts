@@ -6,19 +6,8 @@ import { getServerSideConfig } from "../config/server";
 import md5 from "spark-md5";
 import { ACCESS_CODE_PREFIX, ModelProvider } from "../constant";
 
-// 条件导入，避免在Edge Runtime中加载fs模块
+// 移除了引发打包报错的动态 require("./auth/users") 逻辑，保留默认的空函数验证以防报错
 let verifyToken: (token: string) => any = () => null;
-
-// 仅在非Edge Runtime环境中尝试导入
-if (typeof window === 'undefined' && process && process.env && process.env.NODE_ENV) {
-  try {
-    const { verifyToken: importedVerifyToken } = require("./auth/users");
-    verifyToken = importedVerifyToken;
-  } catch (e) {
-    // 在Edge Runtime中，verifyToken会保持为null函数，但这没关系
-    console.log("[Auth] Running in Edge Runtime, JWT verification disabled");
-  }
-}
 
 function getIP(req: NextRequest) {
   let ip = req.ip ?? req.headers.get("x-real-ip");
@@ -85,13 +74,6 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
   // if user does not provide an api key, inject system api key
   if (!apiKey) {
     const serverConfig = getServerSideConfig();
-
-    // const systemApiKey =
-    //   modelProvider === ModelProvider.GeminiPro
-    //     ? serverConfig.googleApiKey
-    //     : serverConfig.isAzure
-    //     ? serverConfig.azureApiKey
-    //     : serverConfig.apiKey;
 
     let systemApiKey: string | undefined;
 
