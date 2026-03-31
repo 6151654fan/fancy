@@ -51,5 +51,6 @@ export async function executeRequest(
   client: Client,
   request: McpRequestMessage,
 ) {
+  // @ts-ignore：跳过这里由于 zod 和 mcp sdk 造成的无限类型推断
   return client.request(request, z.any());
 }
