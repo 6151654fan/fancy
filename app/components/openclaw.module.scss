@@ -19,12 +19,47 @@ $primary-dark: #dc2626;
 $primary-light: #f87171;
 $primary-50: #fef2f2;
 
+// =========================================
+// 动画定义
+// =========================================
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: $spacing-3xl $spacing-xl;
-  padding-top: $spacing-2xl;
+  padding-top: $spacing-4xl;
   background: linear-gradient(180deg, #fef2f2 0%, #fff1f2 50%, #ffffff 100%);
   position: relative;
   overflow-x: hidden;
@@ -32,29 +67,21 @@ $primary-50: #fef2f2;
   box-sizing: border-box;
   flex: 1;
   width: 100%;
+  min-height: 100%;
+}
 
-  // 背景装饰
-  &::before {
-    content: "";
-    position: absolute;
-    top: -200px;
-    right: -200px;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: -150px;
-    left: -150px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(239, 68, 68, 0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
+// 背景发光效果
+.bgGlow {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(ellipse at center, rgba(239, 68, 68, 0.12) 0%, transparent 60%);
+  filter: blur(60px);
+  pointer-events: none;
+  animation: pulse 6s ease-in-out infinite;
 }
 
 // =========================================
@@ -65,6 +92,15 @@ $primary-50: #fef2f2;
   margin-bottom: $spacing-3xl;
   position: relative;
   z-index: 1;
+  max-width: 600px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .heroGlow {
@@ -136,6 +172,15 @@ $primary-50: #fef2f2;
   max-width: 560px;
   display: flex;
   justify-content: center;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0.15s;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ctaCard {
@@ -294,6 +339,15 @@ $primary-50: #fef2f2;
   margin-top: $spacing-3xl;
   position: relative;
   z-index: 1;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0.3s;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .backBtn {

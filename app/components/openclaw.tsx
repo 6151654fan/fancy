@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./openclaw.module.scss";
 import { useNavigate } from "react-router-dom";
 import { Path } from "../constant";
@@ -23,6 +23,13 @@ function normalizeOpenclawUrl(url: string) {
 export function OpenclawPage() {
   const navigate = useNavigate();
   const config = useAppConfig();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // 延迟触发动画
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const openLocalOpenclaw = () => {
     const targetUrl = normalizeOpenclawUrl(
@@ -37,8 +44,11 @@ export function OpenclawPage() {
 
   return (
     <div className={styles.container}>
+      {/* 背景装饰 */}
+      <div className={styles.bgGlow} />
+
       {/* Hero Section */}
-      <div className={styles.hero}>
+      <div className={`${styles.hero} ${isLoaded ? styles.visible : ""}`}>
         <div className={styles.heroGlow} />
         <div className={styles.heroIcon}>
           <div className={styles.heroIconInner}>
@@ -50,16 +60,16 @@ export function OpenclawPage() {
           开源的个人AI助手
         </p>
         <p className={styles.heroDesc}>
-        OpenClaw是一个开放代理平台，运行在本地，可以从正在使用的聊天应用中运行。
+          OpenClaw是一个开放代理平台，运行在本地，可以从正在使用的聊天应用中运行。
         </p>
       </div>
 
       {/* CTA Section */}
-      <div className={styles.ctaSection}>
+      <div className={`${styles.ctaSection} ${isLoaded ? styles.visible : ""}`}>
         <div className={styles.ctaCard}>
           <h2 className={styles.ctaTitle}>将本地部署模型作为OpenClaw基座</h2>
           <p className={styles.ctaDesc}>
-            已安装 Openclaw？直接打开本地服务，或访问官网了解更多
+            已安装 OpenClaw？直接打开本地服务，或访问官网了解更多
           </p>
           <div className={styles.ctaButtons}>
             <button
@@ -89,7 +99,7 @@ export function OpenclawPage() {
       </div>
 
       {/* Footer */}
-      <div className={styles.footer}>
+      <div className={`${styles.footer} ${isLoaded ? styles.visible : ""}`}>
         <button
           className={styles.backBtn}
           onClick={() => navigate(Path.Home)}
