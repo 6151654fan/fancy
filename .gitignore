@@ -50,3 +50,8 @@ masks.json
 
 # mcp config
 app/mcp/mcp_config.json
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
