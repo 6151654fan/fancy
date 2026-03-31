@@ -19,11 +19,18 @@
   }
 
   &.primary {
-    background-color: var(--primary);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 
     path {
       fill: white !important;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+      filter: brightness(1.05);
     }
   }
 

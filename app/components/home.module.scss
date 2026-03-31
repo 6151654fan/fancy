@@ -402,24 +402,27 @@ $primary-light: #60a5fa;
 }
 
 .chat-item {
-  padding: 12px 14px;
-  background: transparent;
-  border-radius: 8px;
-  margin-bottom: 2px;
-  transition: background 0.15s ease;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+  transition: all 0.3s ease;
   cursor: pointer;
   user-select: none;
-  border: none;
   position: relative;
   content-visibility: auto;
 }
 
 .chat-item:hover {
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.18);
 }
 
 .chat-item-selected {
-  background: #eff6ff;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .chat-item-title {
@@ -626,13 +629,15 @@ $primary-light: #60a5fa;
   top: 0;
   left: var(--sidebar-width);
   right: 0;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
+  background: rgba(240, 249, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 15px rgba(59, 130, 246, 0.1);
   z-index: 999;
   padding: 8px 24px;
   box-sizing: border-box;
   height: 64px;
-  border-bottom: 1px solid #bfdbfe;
+  border-bottom: 1px solid rgba(191, 219, 254, 0.3);
 }
 
 .top-nav-buttons {
@@ -673,6 +678,14 @@ $primary-light: #60a5fa;
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
   }
+}
+
+.top-nav-button-active {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+  color: #1e40af !important;
+  font-weight: 700 !important;
 }
 
 /* 调整容器和窗口内容的样式，为顶部导航栏留出空间 */
