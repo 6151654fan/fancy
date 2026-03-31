@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const users = db
       .prepare(
         `
-      SELECT id, username, password, role 
+      SELECT id, username, password, role, createdBy 
       FROM users 
       ORDER BY id ASC
     `,
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       role: user.role,
       createdAt: new Date(),
       updatedAt: new Date(),
-      createdBy: "系统",
+      createdBy: user.createdBy || "系统",
     }));
 
     return NextResponse.json({
@@ -82,17 +82,17 @@ export async function POST(request: NextRequest) {
     const result = db
       .prepare(
         `
-      INSERT INTO users (username, password, role)
-      VALUES (?, ?, ?)
+      INSERT INTO users (username, password, role, createdBy)
+      VALUES (?, ?, ?, ?)
     `,
       )
-      .run(username, password, role || "user");
+      .run(username, password, role || "user", createdBy);
 
     // 获取新创建的用户
     const newUser = db
       .prepare(
         `
-      SELECT id, username, password, role 
+      SELECT id, username, password, role, createdBy 
       FROM users 
       WHERE id = ?
     `,

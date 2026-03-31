@@ -10,7 +10,7 @@ export function CombinedStatusPage() {
   const monitorStore = useMonitorStore();
   const { stats } = monitorStore; // 直接从全局获取数据
 
-  const SERVER_IP = "192.168.1.37";
+  const SERVER_IP = "192.168.1.93";
   const SERVER_PORT = "3001";
 
   const EMA_COEFF = 0.3;

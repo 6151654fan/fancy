@@ -155,26 +155,42 @@ export function SideBarHeader(props: {
   return (
     <Fragment>
       <div className={styles["sidebar-header"]} data-tauri-drag-region>
-        <div className={styles["sidebar-header-main"]} data-tauri-drag-region>
-          <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
-          {!isCollapsed && (
-            <div className={styles["sidebar-title-container"]}>
-              <div className={styles["sidebar-title"]} data-tauri-drag-region>
-                {title}
+        {isCollapsed ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+            <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+            {onCollapse && (
+              <button
+                className={styles["sidebar-collapse-btn"]}
+                onClick={onCollapse}
+                aria-label="展开侧边栏"
+                type="button"
+              >
+                <ArrowIcon style={{ transform: "rotate(0deg)" }} />
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className={styles["sidebar-header-main"]} data-tauri-drag-region>
+              <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+              <div className={styles["sidebar-title-container"]}>
+                <div className={styles["sidebar-title"]} data-tauri-drag-region>
+                  {title}
+                </div>
+                <div className={styles["sidebar-sub-title"]}>{subTitle}</div>
               </div>
-              <div className={styles["sidebar-sub-title"]}>{subTitle}</div>
             </div>
-          )}
-        </div>
-        {!isCollapsed && onCollapse && (
-          <button
-            className={styles["sidebar-collapse-btn"]}
-            onClick={onCollapse}
-            aria-label="收起侧边栏"
-            type="button"
-          >
-            <ArrowIcon style={{ transform: "rotate(180deg)" }} />
-          </button>
+            {onCollapse && (
+              <button
+                className={styles["sidebar-collapse-btn"]}
+                onClick={onCollapse}
+                aria-label="收起侧边栏"
+                type="button"
+              >
+                <ArrowIcon style={{ transform: "rotate(180deg)" }} />
+              </button>
+            )}
+          </>
         )}
       </div>
       {children}
@@ -270,6 +286,11 @@ function MenuItemComponent({
       aria-label={item.label}
       aria-current={isActive ? "page" : undefined}
       title={isCollapsed ? item.label : undefined}
+      style={isCollapsed ? {
+        justifyContent: "center",
+        paddingLeft: 0,
+        paddingRight: 0,
+      } : undefined}
     >
       <span className={styles["sidebar-menu-item-icon"]}>{item.icon}</span>
       {!isCollapsed && (
@@ -281,7 +302,7 @@ function MenuItemComponent({
 
 export function SideBar(props: { className?: string }) {
   useHotKey();
-  const { isCollapsed, closeSidebar } = useSideBarToggle();
+  const { isCollapsed, closeSidebar, toggleSidebar } = useSideBarToggle();
   const navigate = useNavigate();
   const location = useLocation();
   const chatStore = useChatStore();
@@ -344,7 +365,7 @@ export function SideBar(props: { className?: string }) {
         subTitle="您的本地私有化智能助手"
         logo={<BotIcon />}
         isCollapsed={isCollapsed}
-        onCollapse={closeSidebar}
+        onCollapse={toggleSidebar}
       />
 
       <div
@@ -355,32 +376,32 @@ export function SideBar(props: { className?: string }) {
           overflow: "hidden",
         }}
       >
-        {/* 新建对话按钮 */}
-        <div
-          style={{
-            padding: "10px 20px 5px 20px",
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <IconButton
-            icon={<AddIcon />}
-            text={isCollapsed ? undefined : "新建对话"}
-            className={styles["sidebar-new-chat-btn"]}
-            onClick={() => {
-              chatStore.newSession();
-              navigate(Path.Chat);
-            }}
-            shadow
+        {/* 容器 A (固定区)：新建对话按钮 + 主导航菜单 */}
+        <div style={{ flexShrink: 1, flexGrow: 0 }}>
+          {/* 新建对话按钮 */}
+          <div
             style={{
-              width: "100%",
-              height: "40px",
+              padding: isCollapsed ? "10px 0 5px 0" : "10px 20px 5px 20px",
+              display: "flex",
+              justifyContent: "center",
             }}
-          />
-        </div>
+          >
+            <IconButton
+              icon={<AddIcon />}
+              text={isCollapsed ? undefined : "新建对话"}
+              className={styles["sidebar-new-chat-btn"]}
+              onClick={() => {
+                chatStore.newSession();
+                navigate(Path.Chat);
+              }}
+              shadow
+              style={{
+                width: "100%",
+                height: "40px",
+              }}
+            />
+          </div>
 
-        {/* 可滚动的主导航及聊天列表区域 */}
-        <div style={{ flex: 1, overflow: "auto" }}>
           {/* 主导航菜单 */}
           <div className={styles["sidebar-nav-section"]}>
             {MENU_ITEMS.filter((item) => !item.adminOnly || isAdmin).map(
@@ -395,52 +416,51 @@ export function SideBar(props: { className?: string }) {
               ),
             )}
           </div>
-
-          {/* 对话列表组件 - 被合并时不小心删了，帮你加回来了 */}
-          <SideBarBody>
-            <ChatList narrow={isCollapsed} />
-          </SideBarBody>
         </div>
 
-        {/* 底部设置及用户区域 */}
-        <div
-          style={{
-            paddingTop: "20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            padding: "20px 10px 10px 10px",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* 设置按钮 */}
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <IconButton
-              icon={<SettingsIcon />}
-              text={isCollapsed ? undefined : "设置"}
-              className={styles["sidebar-bar-button"]}
-              onClick={() => navigate(Path.Settings)}
-              shadow
-              style={{ width: "80%" }}
-            />
-          </div>
+        {/* 容器 B (滚动区)：仅包含 ChatList */}
+        <div style={{ flex: 1, overflowY: "auto" }} className={styles["sidebar-scroll-container"]}>
+          {/* 对话列表组件 - 仅在展开状态显示 */}
+          {!isCollapsed && (
+            <SideBarBody>
+              <ChatList narrow={isCollapsed} />
+            </SideBarBody>
+          )}
+        </div>
 
-          {/* 用户信息和菜单 */}
-          <div className={styles["sidebar-footer"]} ref={userSectionRef}>
-            <div className={styles["sidebar-user-section"]}>
-              <div
-                className={styles["sidebar-user-info"]}
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                tabIndex={0}
-                role="button"
-                aria-expanded={showUserMenu}
-                aria-haspopup="menu"
-              >
-                <div className={styles["sidebar-user-avatar"]}>
-                  <BotIcon />
+        {/* 底部用户区域 */}
+        <div className={styles["sidebar-footer"]} ref={userSectionRef}>
+          <div className={styles["sidebar-user-section"]}>
+            <div
+              className={styles["sidebar-user-info"]}
+              style={isCollapsed ? { 
+                flexDirection: 'column', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                paddingLeft: 0, 
+                width: '100%', 
+                gap: '2px' 
+              } : {}}
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              tabIndex={0}
+              role="button"
+              aria-expanded={showUserMenu}
+              aria-haspopup="menu"
+            >
+              {isCollapsed ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>
+                    {accessStore.userSession?.user?.username?.slice(0, 2) || "用户"}
+                  </div>
+                  {accessStore.userSession?.user?.role === "admin" && (
+                      <div style={{ fontSize: '10px', zoom: 0.8, textAlign: 'center', opacity: 0.8, color: '#3b82f6' }}>
+                        管理员
+                      </div>
+                    )}
                 </div>
-                {!isCollapsed && (
+              ) : (
+                <>
+                  <div className={styles["sidebar-user-avatar"]}><BotIcon /></div>
                   <div className={styles["sidebar-user-text"]}>
                     <div className={styles["sidebar-user-name"]}>
                       {accessStore.userSession?.user?.username || "未登录"}
@@ -449,72 +469,72 @@ export function SideBar(props: { className?: string }) {
                       <div className={styles["sidebar-user-role"]}>管理员</div>
                     )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
+            </div>
 
-              {/* 弹出的用户菜单 */}
-              {showUserMenu &&
-                createPortal(
-                  <>
+            {/* 弹出的用户菜单 */}
+            {showUserMenu &&
+              createPortal(
+                <>
+                  <div
+                    className={styles["sidebar-user-mask"]}
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div
+                    className={clsx(styles["sidebar-user-menu"], {
+                      [styles["sidebar-user-menu-collapsed"]]: isCollapsed,
+                    })}
+                    style={menuStyle}
+                    role="menu"
+                  >
                     <div
-                      className={styles["sidebar-user-mask"]}
-                      onClick={() => setShowUserMenu(false)}
-                    />
-                    <div
-                      className={clsx(styles["sidebar-user-menu"], {
-                        [styles["sidebar-user-menu-collapsed"]]: isCollapsed,
-                      })}
-                      style={menuStyle}
-                      role="menu"
+                      className={styles["sidebar-user-menu-item"]}
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate(Path.Settings);
+                      }}
+                      role="menuitem"
+                      tabIndex={0}
                     >
+                      <SettingsIcon />
+                      <span>设置</span>
+                    </div>
+                    {isAdmin && (
                       <div
                         className={styles["sidebar-user-menu-item"]}
                         onClick={() => {
                           setShowUserMenu(false);
-                          navigate(Path.Settings);
+                          navigate(Path.UserManagement);
                         }}
                         role="menuitem"
                         tabIndex={0}
                       >
-                        <SettingsIcon />
-                        <span>设置</span>
+                        <UserIcon />
+                        <span>用户管理</span>
                       </div>
-                      {isAdmin && (
-                        <div
-                          className={styles["sidebar-user-menu-item"]}
-                          onClick={() => {
-                            setShowUserMenu(false);
-                            navigate(Path.UserManagement);
-                          }}
-                          role="menuitem"
-                          tabIndex={0}
-                        >
-                          <UserIcon />
-                          <span>用户管理</span>
-                        </div>
+                    )}
+                    <div className={styles["sidebar-menu-divider-line"]} />
+                    <div
+                      className={clsx(
+                        styles["sidebar-user-menu-item"],
+                        styles.danger,
                       )}
-                      <div className={styles["sidebar-menu-divider-line"]} />
-                      <div
-                        className={clsx(
-                          styles["sidebar-user-menu-item"],
-                          styles.danger,
-                        )}
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          accessStore.logout();
-                          navigate(Path.Auth);
-                        }}
-                        role="menuitem"
-                        tabIndex={0}
-                      >
-                        <LogoutIcon />
-                        <span>退出登录</span>
-                      </div>
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        accessStore.logout();
+                        navigate(Path.Auth);
+                      }}
+                      role="menuitem"
+                      tabIndex={0}
+                    >
+                      <LogoutIcon />
+                      <span>退出登录</span>
                     </div>
-                  </>,
-                  document.body,
-                )}
-            </div>
+                  </div>
+                </>,
+                document.body,
+              )}
           </div>
         </div>
       </div>

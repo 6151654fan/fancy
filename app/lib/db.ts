@@ -19,15 +19,23 @@ function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'user'
+      role TEXT NOT NULL DEFAULT 'user',
+      createdBy TEXT DEFAULT '系统'
     );
   `);
 
+  // 检查并添加 createdBy 字段（向后兼容）
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN createdBy TEXT DEFAULT '系统';`);
+  } catch (error) {
+    // 字段已存在时忽略错误
+  }
+
   // 插入默认用户
   db.exec(`
-    INSERT OR IGNORE INTO users (id, username, password, role) VALUES
-    (1, 'admin', 'admin123', 'admin'),
-    (2, 'user', 'user123', 'user');
+    INSERT OR IGNORE INTO users (id, username, password, role, createdBy) VALUES
+    (1, 'admin', 'admin123', 'admin', '系统'),
+    (2, 'user', 'user123', 'user', '系统');
   `);
 
   // 创建 sessions 表

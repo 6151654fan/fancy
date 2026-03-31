@@ -949,7 +949,7 @@ function _Chat() {
   useEffect(() => {
     const fetchModelName = async () => {
       try {
-        const response = await fetch("http://192.168.1.37:31000/metrics");
+        const response = await fetch("http://192.168.1.93:30000/metrics");
         if (response.ok) {
           const data = await response.text();
           const modelMatch = data.match(

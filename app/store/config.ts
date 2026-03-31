@@ -106,7 +106,7 @@ export const DEFAULT_CONFIG = {
   },
 
   grafanaConfig: {
-    url: "http://192.168.1.37:3000/",
+    url: "http://192.168.1.93:3000/",
   },
 
   openclawConfig: {
