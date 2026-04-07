@@ -3,11 +3,9 @@ import { ModalConfigValidator, ModelConfig } from "../store";
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
-import { ListItem, Select } from "./ui-lib";
+import { ListItem } from "./ui-lib";
 import { useAllModels } from "../utils/hooks";
 import { groupBy } from "lodash-es";
-import styles from "./model-config.module.scss";
-import { getModelProvider } from "../utils/model";
 
 export function ModelConfigList(props: {
   modelConfig: ModelConfig;
@@ -50,7 +48,7 @@ export function ModelConfigList(props: {
         <InputRange
           aria={Locale.Settings.TopP.Title}
           value={(props.modelConfig.top_p ?? 1).toFixed(1)}
-          min="0"
+          min="0.1"
           max="1"
           step="0.1"
           onChange={(e) => {
@@ -65,13 +63,13 @@ export function ModelConfigList(props: {
       </ListItem>
       <ListItem
         title={Locale.Settings.MaxTokens.Title}
-        subTitle={Locale.Settings.MaxTokens.SubTitle}
+        subTitle={`${Locale.Settings.MaxTokens.SubTitle} 当前模型支持最大 32,768 tokens`}
       >
         <input
           aria-label={Locale.Settings.MaxTokens.Title}
           type="number"
           min={1024}
-          max={512000}
+          max={32768}
           value={props.modelConfig.max_tokens}
           onChange={(e) =>
             props.updateConfig(
@@ -129,7 +127,6 @@ export function ModelConfigList(props: {
               }}
             ></InputRange>
           </ListItem>
-          
         </>
       )}
       <ListItem
@@ -151,7 +148,6 @@ export function ModelConfigList(props: {
         ></InputRange>
       </ListItem>
 
-      
       <ListItem title={Locale.Memory.Title} subTitle={Locale.Memory.Send}>
         <input
           aria-label={Locale.Memory.Title}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/app/lib/db";
+import db, { getUserDb, deleteUserDb } from "@/app/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -88,6 +88,9 @@ export async function POST(request: NextRequest) {
       )
       .run(username, password, role || "user", createdBy);
 
+    // 初始化用户的聊天数据库
+    getUserDb(username);
+
     // 获取新创建的用户
     const newUser = db
       .prepare(
@@ -144,7 +147,7 @@ export async function DELETE(request: NextRequest) {
     const existingUser = db
       .prepare(
         `
-      SELECT id FROM users WHERE id = ?
+      SELECT id, username FROM users WHERE id = ?
     `,
       )
       .get(userId);
@@ -158,6 +161,9 @@ export async function DELETE(request: NextRequest) {
 
     // 删除用户
     db.prepare(`DELETE FROM users WHERE id = ?`).run(userId);
+
+    // 彻底删除用户的聊天数据库文件
+    deleteUserDb(existingUser.username);
 
     return NextResponse.json({
       success: true,

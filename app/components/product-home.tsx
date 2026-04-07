@@ -1,5 +1,6 @@
 import { Path } from "../constant";
 import { useNavigate } from "react-router-dom";
+import { useChatStore } from "../store/chat";
 
 // 设计系统
 const theme = {
@@ -41,6 +42,7 @@ const css = `
 
 export function ProductHomePage() {
   const navigate = useNavigate();
+  const chatStore = useChatStore();
 
   return (
     <>
@@ -57,37 +59,46 @@ export function ProductHomePage() {
           <div style={styles.heroContent}>
             {/* Logo */}
             <div style={styles.logoWrap}>
-              <img src="/company-logo-white.png" alt="FerroSemi" style={styles.logo} />
+              <img
+                src="/company-logo-white.png"
+                alt="FerroSemi"
+                style={styles.logo}
+              />
             </div>
 
             {/* Badge */}
             <div style={styles.badge}>
               <span style={styles.badgeDot} />
-              单机部署 671B–685B 级MoE大模型
+              单机部署最大 671B 级MoE大模型
             </div>
 
             {/* Title */}
-            <h1 style={styles.title}>
-              晶铁普惠满血推理一体机
-            </h1>
+            <h1 style={styles.title}>晶铁普惠AI一体机</h1>
 
             {/* Desc */}
             <p style={styles.desc}>
-              面向政企与科研用户，单机支持 <b style={{ color: theme.accent }}>DeepSeek-V3 / R1</b> 级超大模型私有化部署
+              面向政企与科研用户，单机支持{" "}
+              <b style={{ color: theme.accent }}>DeepSeek-V3 / R1</b>{" "}
+              级超大模型私有化部署
               <br />
-              <span style={{ color: theme.text.muted }}>数据安全 · 成本可控 · 工程落地</span>
+              <span style={{ color: theme.text.muted }}>
+                数据安全 · 成本可控 · 工程落地
+              </span>
             </p>
 
             {/* Buttons */}
             <div style={styles.btns}>
               <button
                 style={styles.btnMain}
-                onClick={() => navigate(Path.Inference)}
-                onMouseEnter={e => {
+                onClick={() => {
+                  chatStore.newSession();
+                  navigate(Path.Inference);
+                }}
+                onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-2px)";
                   e.currentTarget.style.boxShadow = `0 12px 40px ${theme.primaryGlow}`;
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.boxShadow = `0 4px 24px ${theme.primaryGlow}`;
                 }}
@@ -98,16 +109,17 @@ export function ProductHomePage() {
               <button
                 style={styles.btnSub}
                 onClick={() => navigate(Path.Showcase)}
-                onMouseEnter={e => {
+                onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = theme.primary;
                   e.currentTarget.style.color = theme.primary;
                 }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = "rgba(148, 163, 184, 0.2)";
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor =
+                    "rgba(148, 163, 184, 0.2)";
                   e.currentTarget.style.color = theme.text.secondary;
                 }}
               >
-                产品手册
+                样机展示
               </button>
             </div>
           </div>
@@ -166,9 +178,16 @@ export function ProductHomePage() {
             <p style={styles.ctaDesc}>立即体验满血版大模型推理能力</p>
             <button
               style={styles.ctaBtn}
-              onClick={() => navigate(Path.Inference)}
-              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.03)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              onClick={() => {
+                chatStore.newSession();
+                navigate(Path.Inference);
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.03)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
             >
               立即开始
             </button>
@@ -180,22 +199,36 @@ export function ProductHomePage() {
 }
 
 // Feature Card - 2x2
-function Feature({ num, title, desc }: { num: string; title: string; desc: string }) {
+function Feature({
+  num,
+  title,
+  desc,
+}: {
+  num: string;
+  title: string;
+  desc: string;
+}) {
   return (
     <div
       style={styles.featureCard}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-8px)";
         e.currentTarget.style.borderColor = "rgba(29, 147, 171, 0.3)";
-        (e.currentTarget.querySelector(".feature-num") as HTMLElement)!.style.color = theme.primary;
+        (e.currentTarget.querySelector(
+          ".feature-num",
+        ) as HTMLElement)!.style.color = theme.primary;
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.borderColor = theme.border;
-        (e.currentTarget.querySelector(".feature-num") as HTMLElement)!.style.color = theme.text.muted;
+        (e.currentTarget.querySelector(
+          ".feature-num",
+        ) as HTMLElement)!.style.color = theme.text.muted;
       }}
     >
-      <div className="feature-num" style={styles.featureNum}>{num}</div>
+      <div className="feature-num" style={styles.featureNum}>
+        {num}
+      </div>
       <h3 style={styles.featureTitle}>{title}</h3>
       <p style={styles.featureDesc}>{desc}</p>
     </div>
@@ -207,11 +240,11 @@ function Scene({ title, desc }: { title: string; desc: string }) {
   return (
     <div
       style={styles.sceneCard}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = theme.primary;
         e.currentTarget.style.background = "rgba(29, 147, 171, 0.05)";
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = theme.border;
         e.currentTarget.style.background = theme.bg.card;
       }}
@@ -224,8 +257,17 @@ function Scene({ title, desc }: { title: string; desc: string }) {
 
 function ArrowIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14M12 5l7 7-7 7"/>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M12 5l7 7-7 7" />
     </svg>
   );
 }
@@ -236,7 +278,8 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: "100%",
     background: theme.bg.primary,
     color: theme.text.primary,
-    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif',
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif',
     overflowY: "auto",
     position: "relative",
   },
@@ -419,7 +462,8 @@ const styles: Record<string, React.CSSProperties> = {
   scenesSection: {
     position: "relative",
     padding: "60px 32px",
-    background: "linear-gradient(180deg, transparent 0%, rgba(29, 147, 171, 0.02) 100%)",
+    background:
+      "linear-gradient(180deg, transparent 0%, rgba(29, 147, 171, 0.02) 100%)",
   },
   scenesHeader: {
     textAlign: "center",

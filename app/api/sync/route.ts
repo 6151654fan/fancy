@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/app/lib/db";
+import db, { getUserDb } from "@/app/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,22 +9,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少 userId 参数" }, { status: 400 });
     }
 
+    // 获取用户信息，获取用户名
+    const user = db
+      .prepare(`SELECT username FROM users WHERE id = ?`)
+      .get(userId);
+
+    if (!user) {
+      return NextResponse.json({ error: "用户不存在" }, { status: 404 });
+    }
+
+    const userDb = getUserDb(user.username);
+
     // 查询用户的所有会话
-    const sessions = db
+    const sessions = userDb
       .prepare(
         `
       SELECT id, sessionId, title, createdAt 
       FROM sessions 
-      WHERE userId = ? 
       ORDER BY createdAt DESC
     `,
       )
-      .all(userId);
+      .all();
 
     // 为每个会话查询消息
     const sessionsWithMessages = await Promise.all(
       sessions.map(async (session: any) => {
-        const messages = db
+        const messages = userDb
           .prepare(
             `
         SELECT messageId, role, content, date 
@@ -65,17 +75,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
+    // 获取用户信息，获取用户名
+    const user = db
+      .prepare(`SELECT username FROM users WHERE id = ?`)
+      .get(userId);
+
+    if (!user) {
+      return NextResponse.json({ error: "用户不存在" }, { status: 404 });
+    }
+
+    const userDb = getUserDb(user.username);
+
     // 开始事务
-    const transaction = db.transaction(() => {
+    const transaction = userDb.transaction(() => {
       // 检查会话是否存在
-      const existingSession = db
+      const existingSession = userDb
         .prepare(
           `
         SELECT id FROM sessions 
-        WHERE userId = ? AND sessionId = ?
+        WHERE sessionId = ?
       `,
         )
-        .get(userId, session.id);
+        .get(session.id);
 
       let sessionId;
       if (existingSession) {
@@ -85,35 +106,32 @@ export async function POST(request: NextRequest) {
         // 会话不存在，插入新会话
         // 优先使用title，其次topic，最后使用兜底字符串
         const finalTitle = session.title || session.topic || "新的聊天";
-        const result = db
+        const result = userDb
           .prepare(
             `
-          INSERT INTO sessions (userId, sessionId, title, createdAt) 
-          VALUES (?, ?, ?, ?)
+          INSERT INTO sessions (sessionId, title, createdAt) 
+          VALUES (?, ?, ?)
         `,
           )
-          .run(
-            userId,
-            session.id,
-            finalTitle,
-            session.createdAt || new Date().toISOString(),
-          );
+          .run(session.id, finalTitle, session.createdAt || Date.now());
         sessionId = result.lastInsertRowid;
       }
 
       // 插入消息
-      db.prepare(
-        `
+      userDb
+        .prepare(
+          `
         INSERT OR REPLACE INTO messages (sessionId, messageId, role, content, date) 
         VALUES (?, ?, ?, ?, ?)
       `,
-      ).run(
-        sessionId,
-        message.id,
-        message.role,
-        JSON.stringify(message.content),
-        message.date,
-      );
+        )
+        .run(
+          sessionId,
+          message.id,
+          message.role,
+          JSON.stringify(message.content),
+          message.date,
+        );
     });
 
     // 执行事务
@@ -135,26 +153,36 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
+    // 获取用户信息，获取用户名
+    const user = db
+      .prepare(`SELECT username FROM users WHERE id = ?`)
+      .get(userId);
+
+    if (!user) {
+      return NextResponse.json({ error: "用户不存在" }, { status: 404 });
+    }
+
+    const userDb = getUserDb(user.username);
+
     // 开始事务
-    const transaction = db.transaction(() => {
+    const transaction = userDb.transaction(() => {
       // 首先获取会话的数据库ID
-      const session = db
+      const session = userDb
         .prepare(
           `
         SELECT id FROM sessions 
-        WHERE userId = ? AND sessionId = ?
+        WHERE sessionId = ?
       `,
         )
-        .get(userId, sessionId);
+        .get(sessionId);
 
       if (session) {
         // 删除会话相关的所有消息
-        db.prepare(`DELETE FROM messages WHERE sessionId = ?`).run(session.id);
+        userDb
+          .prepare(`DELETE FROM messages WHERE sessionId = ?`)
+          .run(session.id);
         // 删除会话本身
-        db.prepare(`DELETE FROM sessions WHERE id = ? AND userId = ?`).run(
-          session.id,
-          userId,
-        );
+        userDb.prepare(`DELETE FROM sessions WHERE id = ?`).run(session.id);
       }
     });
 

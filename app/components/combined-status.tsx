@@ -108,29 +108,6 @@ export function CombinedStatusPage() {
           </div>
         </div>
 
-        {/* 顶部 4 个信息卡片 (高度压缩) */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "12px",
-            marginBottom: "16px",
-          }}
-        >
-          <MiniInfoCard
-            label="推理后端"
-            value="K-Transformers"
-            sub="异构卸载内核"
-          />
-          <MiniInfoCard label="量化精度" value="FP8 " sub="混合精度推理" />
-          <MiniInfoCard
-            label="上下文长度"
-            value="32K / 64K"
-            sub="标准/可选扩展"
-          />
-          <MiniInfoCard label="当前并发" value="4 - 8 路" sub="推荐服务区间" />
-        </div>
-
         {/* 拓扑图与性能表 (左右布局) */}
         <div
           style={{
@@ -139,57 +116,30 @@ export function CombinedStatusPage() {
             gap: "16px",
           }}
         >
-          {/* 左：权重驻留拓扑 */}
+          {/* 左：2×2 信息卡片网格 */}
           <div
             style={{
-              padding: "16px",
-              border: "1px solid #e2e8f0",
-              borderRadius: "16px",
-              background: "#f8fafc",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "12px",
             }}
           >
-            <h4
-              style={{
-                margin: "0 0 12px 0",
-                fontSize: "14px",
-                fontWeight: "800",
-                color: "#1e293b",
-              }}
-            >
-              ▍ 权重驻留拓扑 (实时分布)
-            </h4>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-            >
-              <CompactProgress
-                label="GPU 显存驻留 (Attention / KV-Cache)"
-                percent={Math.round((stats.vram / 48) * 100)}
-                value={`${stats.vram} GB`}
-                desc="48GB 显存已分配，承载热数据与激活专家"
-                color="#10b981"
-              />
-              <CompactProgress
-                label="CPU 内存卸载 (MoE Experts)"
-                percent={Math.round((stats.ram / stats.ramTotal) * 100)}
-                value={`${stats.ram} GB`}
-                desc={`全量权重驻留于 ${stats.ramTotal} GB 主存，实现单机满血加载`}
-                color="#3b82f6"
-              />
-            </div>
-            <div
-              style={{
-                marginTop: "12px",
-                padding: "8px 12px",
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                fontSize: "11px",
-                color: "#64748b",
-              }}
-            >
-              <strong>技术突破：</strong> 采用 CPU-GPU 异构卸载技术，成功在双路
-              EPYC 平台实现模型私有化运行。
-            </div>
+            <MiniInfoCard
+              label="推理后端"
+              value="K-Transformers"
+              sub="异构卸载内核"
+            />
+            <MiniInfoCard label="量化精度" value="FP8 " sub="混合精度推理" />
+            <MiniInfoCard
+              label="上下文长度"
+              value="32K / 64K"
+              sub="标准/可选扩展"
+            />
+            <MiniInfoCard
+              label="当前并发"
+              value="4 - 8 路"
+              sub="推荐服务区间"
+            />
           </div>
 
           {/* 右：性能基线 */}
@@ -228,11 +178,8 @@ export function CombinedStatusPage() {
                   gap: "12px",
                 }}
               >
-                <CompactDetailRow
-                  label="单会话输出吞吐:"
-                  value="7 - 12 tok/s"
-                />
-                <CompactDetailRow label="总吞吐:" value="20 - 30 tok/s" />
+                <CompactDetailRow label="单会话输出吞吐:" value="> 12 tok/s" />
+                <CompactDetailRow label="总吞吐:" value="> 24 tok/s" />
               </div>
               <div
                 style={{
@@ -241,11 +188,60 @@ export function CombinedStatusPage() {
                   gap: "12px",
                 }}
               >
-                <CompactDetailRow
-                  label="首 Token 延迟 (TTFT):"
-                  value="700 ms - 1.0 s"
-                  valueStyle={{ color: "#2563eb", fontWeight: "850" }}
-                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px",
+                    paddingBottom: "6px",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#64748b",
+                      fontSize: "11px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    首 Token 延迟 (TTFT):
+                  </span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: "8px",
+                    }}
+                  >
+                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                      8K上下文
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "850",
+                        color: "#3b82f6",
+                      }}
+                    >
+                      {"<"} 12s
+                    </span>
+                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                      ,
+                    </span>
+                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                      20K上下文
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "850",
+                        color: "#3b82f6",
+                      }}
+                    >
+                      {"<"} 16s
+                    </span>
+                  </div>
+                </div>
                 <CompactDetailRow
                   label="批量预填充吞吐:"
                   value="> 1000 tok/s"

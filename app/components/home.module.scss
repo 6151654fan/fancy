@@ -1011,10 +1011,12 @@ $primary-light: #60a5fa;
   padding: $spacing-md;
   border-radius: $spacing-md;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 
   &:hover {
-    background: #f8fafc;
+    background: #f0f9ff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
   }
 }
 

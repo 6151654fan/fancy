@@ -1,6 +1,5 @@
 import { getClientConfig } from "../config/client";
 import { SubmitKey } from "../store/config";
-import { SAAS_CHAT_UTM_URL } from "@/app/constant";
 
 const isApp = !!getClientConfig()?.isApp;
 
@@ -20,8 +19,7 @@ const cn = {
     Confirm: "确认",
     Later: "稍后再说",
     SaasTips: "",
-    TopTips:
-      "",
+    TopTips: "",
   },
   ChatItem: {
     ChatItemCount: (count: number) => `${count} 条对话`,
@@ -308,8 +306,7 @@ const cn = {
       SaasStart: {
         Title: "",
         Label: "",
-        SubTitle:
-          "",
+        SubTitle: "",
         ChatNow: "立刻对话",
       },
       AccessCode: {
@@ -626,7 +623,7 @@ const cn = {
   },
   Store: {
     DefaultTopic: "新的聊天",
-    BotHello: "## 你好，有什么可以帮你的吗",
+    BotHello: "## 您好，有什么可以帮你的吗",
     Error: "出错了，稍后重试吧",
     Prompt: {
       History: (content: string) => "这是历史聊天总结作为前情提要：" + content,

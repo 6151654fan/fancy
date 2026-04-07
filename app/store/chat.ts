@@ -809,12 +809,48 @@ export const useChatStore = createPersistStore(
             },
             onFinish(message, responseRes) {
               if (responseRes?.status === 200) {
-                get().updateTargetSession(
-                  session,
-                  (session) =>
-                    (session.topic =
-                      message.length > 0 ? trimTopic(message) : DEFAULT_TOPIC),
-                );
+                // ==========================================
+                // 🛠️ 新增：剥离推理模型的 <think> 思考过程
+                // ==========================================
+                let cleanMessage = message || "";
+
+                // 如果检测到 </think> 结束标签，直接切断，只保留标签后面的真正标题
+                if (cleanMessage.includes("</think>")) {
+                  cleanMessage = cleanMessage.split("</think>").pop() || "";
+                }
+
+                // 清理可能残余的换行符和首尾空格
+                cleanMessage = cleanMessage.trim();
+                // ==========================================
+
+                const finalTopic =
+                  cleanMessage.length > 0
+                    ? trimTopic(cleanMessage)
+                    : DEFAULT_TOPIC;
+
+                // 使用带大括号的函数体更新状态
+                get().updateTargetSession(session, (session) => {
+                  session.topic = finalTopic;
+                });
+
+                // 异步落库请求
+                const accessStore = useAccessStore.getState();
+                const userId = accessStore.userSession?.user?.id;
+                if (userId) {
+                  fetch("/api/sqlite/update-topic", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      sessionId: session.id,
+                      topic: finalTopic,
+                      userId,
+                    }),
+                  }).catch((error) => {
+                    console.error("更新标题到SQLite失败:", error);
+                  });
+                }
               }
             },
           });
@@ -958,7 +994,7 @@ export const useChatStore = createPersistStore(
                   wordCount: 0,
                   charCount: 0,
                 },
-                lastUpdate: Date.now(),
+                lastUpdate: serverSession.createdAt || Date.now(),
                 lastSummarizeIndex: 0,
                 mask: createEmptyMask(),
               }),
