@@ -66,8 +66,8 @@ export const DEFAULT_CONFIG = {
   modelConfig: {
     model: "Minimax-M2.5" as ModelType,
     providerName: "OpenAI" as ServiceProvider,
-    temperature: 0.5,
-    top_p: 1,
+    temperature: 1,
+    top_p: 0.95,
     max_tokens: 4000,
     presence_penalty: 0,
     frequency_penalty: 0,

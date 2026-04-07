@@ -63,6 +63,8 @@ export type ChatMessage = RequestMessage & {
   tools?: ChatMessageTool[];
   audio_url?: string;
   isMcpResponse?: boolean;
+  tps?: number;
+  totalTokens?: number;
 };
 
 export function createMessage(override: Partial<ChatMessage>): ChatMessage {
@@ -532,10 +534,19 @@ export const useChatStore = createPersistStore(
         api.llm.chat({
           messages: sendMessages,
           config: { ...modelConfig, stream: true },
-          onUpdate(message) {
+          onUpdate(
+            message: string,
+            chunk: string,
+            tps?: number,
+            totalTokens?: number,
+          ) {
             botMessage.streaming = true;
             if (message) {
               botMessage.content = message;
+            }
+            if (tps !== undefined && totalTokens !== undefined) {
+              botMessage.tps = tps;
+              botMessage.totalTokens = totalTokens;
             }
             get().updateTargetSession(session, (session) => {
               session.messages = session.messages.concat();

@@ -409,8 +409,23 @@ export function SideBar(props: { className?: string }) {
               text={isCollapsed ? undefined : "新建对话"}
               className={styles["sidebar-new-chat-btn"]}
               onClick={() => {
-                chatStore.newSession();
-                navigate(Path.Chat);
+                const chatStore = useChatStore.getState();
+
+                // 判断当前是否已经在聊天主界面
+                const isChatRoute =
+                  location.pathname === Path.Chat ||
+                  location.pathname === Path.Inference;
+
+                if (!isChatRoute) {
+                  // 如果在设置页等其他页面，复用主页的成功经验：带参数跳转，把新建任务交给目标页
+                  navigate(`${Path.Inference}?action=new`);
+                } else {
+                  // 如果已经在聊天页，使用异步微小延时避开 React 当前的渲染冲突
+                  setTimeout(() => {
+                    chatStore.newSession();
+                    chatStore.selectSession(0); // 强制锁定指针
+                  }, 50);
+                }
               }}
               shadow
               style={{

@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from "react";
 import styles from "./openclaw.module.scss";
 import { useNavigate } from "react-router-dom";
-import { Path } from "../constant";
 import { useAppConfig } from "../store";
 import ClawIcon from "../icons/claw.svg";
 import ExternalLinkIcon from "../icons/share.svg";
 import DownloadIcon from "../icons/download.svg";
-import ArrowIcon from "../icons/arrow.svg";
 
 const DEFAULT_OPENCLAW_URL = "http://localhost:18789/openclaw/";
 const OPENCLAW_OFFICIAL_URL = "https://openclaw.ai";
@@ -56,9 +54,7 @@ export function OpenclawPage() {
           </div>
         </div>
         <h1 className={styles.heroTitle}>OpenClaw</h1>
-        <p className={styles.heroSubtitle}>
-          开源的个人AI助手
-        </p>
+        <p className={styles.heroSubtitle}>开源的个人AI助手</p>
         <p className={styles.heroDesc}>
           OpenClaw是一个开放代理平台，运行在本地，可以从正在使用的聊天应用中运行。
         </p>
@@ -96,18 +92,6 @@ export function OpenclawPage() {
             </code>
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className={`${styles.footer} ${isLoaded ? styles.visible : ""}`}>
-        <button
-          className={styles.backBtn}
-          onClick={() => navigate(Path.Home)}
-          type="button"
-        >
-          <ArrowIcon />
-          <span>返回首页</span>
-        </button>
       </div>
     </div>
   );

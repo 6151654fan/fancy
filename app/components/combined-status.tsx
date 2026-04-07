@@ -126,8 +126,8 @@ export function CombinedStatusPage() {
           >
             <MiniInfoCard
               label="推理后端"
-              value="K-Transformers"
-              sub="异构卸载内核"
+              value="异构卸载内核"
+              sub="GPU/CPU联合计算"
             />
             <MiniInfoCard label="量化精度" value="FP8 " sub="混合精度推理" />
             <MiniInfoCard

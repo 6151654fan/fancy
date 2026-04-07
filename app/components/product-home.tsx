@@ -90,9 +90,14 @@ export function ProductHomePage() {
             <div style={styles.btns}>
               <button
                 style={styles.btnMain}
-                onClick={() => {
-                  chatStore.newSession();
-                  navigate(Path.Inference);
+                onClick={(e) => {
+                  if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+
+                  // 跳转到聊天页面并携带新建会话的参数
+                  navigate(`${Path.Inference}?action=new`);
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-2px)";
@@ -178,9 +183,14 @@ export function ProductHomePage() {
             <p style={styles.ctaDesc}>立即体验满血版大模型推理能力</p>
             <button
               style={styles.ctaBtn}
-              onClick={() => {
-                chatStore.newSession();
-                navigate(Path.Inference);
+              onClick={(e) => {
+                if (e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+
+                // 跳转到聊天页面并携带新建会话的参数
+                navigate(`${Path.Inference}?action=new`);
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.transform = "scale(1.03)")
