@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useMonitorStore } from "@/app/store/monitor";
 
@@ -9,6 +9,29 @@ import { useMonitorStore } from "@/app/store/monitor";
 export function CombinedStatusPage() {
   const monitorStore = useMonitorStore();
   const { stats } = monitorStore; // 直接从全局获取数据
+
+  // 模型配置列表
+  const CONFIGS = [
+    "DeepSeek-R1-32K.yaml",
+    "DeepSeek-V3.2-FP8-32K.yaml",
+    "DeepSeek-V3.2-INT4-32K.yaml",
+    "Kimi-K2.5-32K.yaml",
+    "MiniMax-M2.5-32K.yaml",
+    "MiniMax-M2.5-128K.yaml",
+    "Qwen3.5-397B-32K.yaml",
+    "Qwen3.5-397B-128K.yaml",
+  ];
+
+  // 状态管理
+  const [currentModel, setCurrentModel] = useState<string>(
+    "MiniMax-M2.5-32K.yaml",
+  );
+  const [isSwitching, setIsSwitching] = useState<boolean>(false);
+  const [healthCheckInterval, setHealthCheckInterval] =
+    useState<NodeJS.Timeout | null>(null);
+  const [switchTimeout, setSwitchTimeout] = useState<NodeJS.Timeout | null>(
+    null,
+  );
 
   const SERVER_IP = "192.168.1.93";
   const SERVER_PORT = "3001";
@@ -53,6 +76,89 @@ export function CombinedStatusPage() {
 
     // 注意：这里监听 stats.cpu 是为了闭包能拿到最新的平滑值
   }, [stats.cpu, stats.gpu]);
+
+  // 模型切换函数
+  const handleSwitchModel = async (modelConfig: string) => {
+    // 清除之前的定时器
+    if (healthCheckInterval) {
+      clearInterval(healthCheckInterval);
+      setHealthCheckInterval(null);
+    }
+    if (switchTimeout) {
+      clearTimeout(switchTimeout);
+      setSwitchTimeout(null);
+    }
+
+    setIsSwitching(true);
+    setCurrentModel(modelConfig);
+
+    try {
+      // 调用模型切换API
+      const response = await fetch("/api/model/switch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ modelConfig }),
+      });
+
+      if (!response.ok) {
+        throw new Error("模型切换请求失败");
+      }
+
+      // 启动轮询健康检查
+      const interval = setInterval(async () => {
+        try {
+          const healthResponse = await fetch("/api/model/health");
+          const healthData = await healthResponse.json();
+
+          if (healthData.status === "ready") {
+            // 模型切换成功
+            clearInterval(interval);
+            setHealthCheckInterval(null);
+            setIsSwitching(false);
+            alert("模型切换成功！");
+          }
+        } catch (error) {
+          // 健康检查失败，继续轮询
+          console.log("健康检查中...");
+        }
+      }, 30000); // 每30秒轮询一次
+
+      setHealthCheckInterval(interval);
+
+      // 设置20分钟超时
+      const timeout = setTimeout(
+        () => {
+          if (healthCheckInterval) {
+            clearInterval(healthCheckInterval);
+            setHealthCheckInterval(null);
+          }
+          setIsSwitching(false);
+          alert("模型切换超时，请检查服务器状态");
+        },
+        20 * 60 * 1000,
+      ); // 20分钟
+
+      setSwitchTimeout(timeout);
+    } catch (error) {
+      setIsSwitching(false);
+      alert("模型切换失败，请检查服务器状态");
+      console.error("模型切换失败:", error);
+    }
+  };
+
+  // 清理函数
+  useEffect(() => {
+    return () => {
+      if (healthCheckInterval) {
+        clearInterval(healthCheckInterval);
+      }
+      if (switchTimeout) {
+        clearTimeout(switchTimeout);
+      }
+    };
+  }, [healthCheckInterval, switchTimeout]);
 
   // 极致压缩的全局容器：使用 overflow: hidden 强制不滚动
   const containerStyle = {
@@ -105,6 +211,97 @@ export function CombinedStatusPage() {
             }}
           >
             引擎状态：{stats.isConnected ? "满血就绪" : "连接中"}
+          </div>
+        </div>
+
+        {/* 模型切换面板 */}
+        <div
+          style={{
+            marginBottom: "16px",
+            padding: "12px 16px",
+            backgroundColor: "#f8fafc",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "14px",
+                fontWeight: "700",
+                color: "#0f172a",
+                margin: 0,
+              }}
+            >
+              模型切换
+            </h3>
+            {isSwitching && (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    border: "2px solid #3b82f6",
+                    borderTop: "2px solid transparent",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                  }}
+                ></div>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#3b82f6",
+                    fontWeight: "600",
+                  }}
+                >
+                  正在加载模型权重到显存，预计需要几分钟...
+                </span>
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}
+          >
+            {CONFIGS.map((config) => (
+              <button
+                key={config}
+                onClick={() => handleSwitchModel(config)}
+                disabled={isSwitching || currentModel === config}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  backgroundColor:
+                    currentModel === config ? "#3b82f6" : "#ffffff",
+                  color: currentModel === config ? "#ffffff" : "#1f2937",
+                  border: `1px solid ${
+                    currentModel === config ? "#3b82f6" : "#e2e8f0"
+                  }`,
+                  cursor:
+                    isSwitching || currentModel === config
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: isSwitching ? 0.6 : 1,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {config.replace(".yaml", "")}
+              </button>
+            ))}
           </div>
         </div>
 
