@@ -63,7 +63,7 @@
     background-color: transparent;
     color: #6b7280;
     border: 1px solid #e5e7eb;
-    padding: 6px 12px;
+    padding: 4px 12px;
     align-items: center;
     height: auto;
     width: auto;
@@ -399,6 +399,8 @@
 
 .chat-message-avatar {
   position: relative;
+  display: flex;
+  align-items: center;
 
   .chat-message-edit {
     position: absolute;

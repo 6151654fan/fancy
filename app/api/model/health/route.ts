@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-export async function GET() {
+// 强制动态执行，禁用服务端缓存
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
   try {
     // 创建一个带超时的fetch请求
     const controller = new AbortController();
@@ -8,6 +11,7 @@ export async function GET() {
 
     const response = await fetch("http://localhost:30000/health", {
       signal: controller.signal,
+      cache: "no-store",
     });
 
     clearTimeout(timeoutId);

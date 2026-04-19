@@ -240,6 +240,7 @@ const MENU_ITEMS: MenuItem[] = [
     icon: <HomeIcon />,
     label: "产品主页",
     path: Path.ProductHome,
+    adminOnly: true,
   },
   {
     id: "model-monitor",
@@ -260,12 +261,14 @@ const MENU_ITEMS: MenuItem[] = [
     icon: <ShowcaseIcon />,
     label: "样机展示",
     path: Path.Showcase,
+    adminOnly: true,
   },
   {
     id: "openclaw",
     icon: <ClawIcon />,
     label: "OpenClaw",
     path: Path.Openclaw,
+    adminOnly: true,
   },
 ];
 

@@ -780,6 +780,37 @@ export function ChatActions(props: {
           />
         )}
         {!isMobileScreen && <MCPAction />}
+
+        {/* 最大回复长度选择器 */}
+        <div
+          className={`${styles["chat-input-action"]} flex items-center gap-1`}
+        >
+          <span className="text-xs whitespace-nowrap">最大上下文限制:</span>
+          <select
+            className="bg-transparent border-none outline-none cursor-pointer font-mono p-0 m-0 text-xs text-inherit appearance-auto"
+            value={session.mask.modelConfig.max_tokens || 2000}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              chatStore.updateTargetSession(session, (session) => {
+                session.mask.modelConfig.max_tokens = val;
+              });
+            }}
+          >
+            {(() => {
+              const currentModelName = session.mask.modelConfig.model || "";
+              const match = currentModelName.match(/-(\d+)K$/i);
+              const maxK = match ? parseInt(match[1], 10) : 8;
+              const availableKs = [1, 2, 4, 8, 16, 32, 64, 128, 256].filter(
+                (k) => k <= maxK,
+              );
+              return availableKs.map((k) => (
+                <option key={k} value={k * 1000}>
+                  {k}k
+                </option>
+              ));
+            })()}
+          </select>
+        </div>
       </>
       <div className={styles["chat-input-actions-end"]}>
         {config.realtimeConfig.enable && accessStore.isAdmin() && (
@@ -1856,22 +1887,29 @@ function _Chat() {
                                     {["system"].includes(message.role) ? (
                                       <Avatar avatar="2699-fe0f" />
                                     ) : (
-                                      <MaskAvatar
-                                        avatar={session.mask.avatar}
-                                        model={
-                                          message.model ||
-                                          session.mask.modelConfig.model
-                                        }
-                                      />
+                                      <>
+                                        <MaskAvatar
+                                          avatar={session.mask.avatar}
+                                          model={
+                                            message.model ||
+                                            session.mask.modelConfig.model
+                                          }
+                                        />
+                                        <div className="flex items-center ml-2 px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[10px] font-mono">
+                                          {message.model ||
+                                            session.mask.modelConfig.model}
+                                        </div>
+                                      </>
                                     )}
                                   </>
                                 )}
                               </div>
-                              {!isUser && (
+                              {/* 注释掉模型名称显示 */}
+                              {/* {!isUser && (
                                 <div className={styles["chat-model-name"]}>
                                   {modelName || message.model}
                                 </div>
-                              )}
+                              )} */}
 
                               {showActions && (
                                 <div className={styles["chat-message-actions"]}>
@@ -2040,9 +2078,13 @@ function _Chat() {
                                   gap: "10px",
                                 }}
                               >
-                                <span>
-                                  ⚡ {message.tps?.toFixed(1) || "0.0"} t/s
-                                </span>
+                                {/* 只有当不在 streaming 状态时，才显示 TPS */}
+                                {!message.streaming && (
+                                  <span>
+                                    ⚡ {message.tps?.toFixed(1) || "0.0"} t/s
+                                  </span>
+                                )}
+                                {/* 总 Token 数保持原样，没有任何条件包裹，实时显示 */}
                                 <span>🪙 {message.totalTokens} tokens</span>
                               </div>
                             )}

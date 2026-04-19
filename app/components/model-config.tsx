@@ -61,26 +61,6 @@ export function ModelConfigList(props: {
           }}
         ></InputRange>
       </ListItem>
-      <ListItem
-        title={Locale.Settings.MaxTokens.Title}
-        subTitle={`${Locale.Settings.MaxTokens.SubTitle} 当前模型支持最大 32,768 tokens`}
-      >
-        <input
-          aria-label={Locale.Settings.MaxTokens.Title}
-          type="number"
-          min={1024}
-          max={32768}
-          value={props.modelConfig.max_tokens}
-          onChange={(e) =>
-            props.updateConfig(
-              (config) =>
-                (config.max_tokens = ModalConfigValidator.max_tokens(
-                  e.currentTarget.valueAsNumber,
-                )),
-            )
-          }
-        ></input>
-      </ListItem>
 
       {props.modelConfig?.providerName == ServiceProvider.Google ? null : (
         <>
