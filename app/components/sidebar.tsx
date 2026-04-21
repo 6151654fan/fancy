@@ -8,11 +8,6 @@ import SettingsIcon from "../icons/settings.svg";
 import AddIcon from "../icons/add.svg";
 import ArrowIcon from "../icons/arrow.svg";
 import BotIcon from "../icons/bot.svg";
-import DiscoveryIcon from "../icons/discovery.svg";
-import ClawIcon from "../icons/openclaw.svg";
-import HomeIcon from "../icons/home.svg";
-import ChartIcon from "../icons/chart.svg";
-import ShowcaseIcon from "../icons/showcase.svg";
 import UserIcon from "../icons/user.svg";
 import LogoutIcon from "../icons/logout.svg";
 
@@ -236,38 +231,10 @@ interface MenuItem {
 // 主导航菜单
 const MENU_ITEMS: MenuItem[] = [
   {
-    id: "product-home",
-    icon: <HomeIcon />,
-    label: "产品主页",
-    path: Path.ProductHome,
-    adminOnly: true,
-  },
-  {
     id: "model-monitor",
-    icon: <DiscoveryIcon />,
-    label: "模型监控",
+    icon: <SettingsIcon />,
+    label: "切换模型",
     path: Path.Dashboard,
-    adminOnly: true,
-  },
-  {
-    id: "realtime-metrics",
-    icon: <ChartIcon />,
-    label: "实时指标",
-    path: Path.Grafana,
-    adminOnly: true,
-  },
-  {
-    id: "showcase",
-    icon: <ShowcaseIcon />,
-    label: "样机展示",
-    path: Path.Showcase,
-    adminOnly: true,
-  },
-  {
-    id: "openclaw",
-    icon: <ClawIcon />,
-    label: "OpenClaw",
-    path: Path.Openclaw,
     adminOnly: true,
   },
 ];

@@ -1,51 +1,55 @@
 FROM node:18-alpine AS base
 
+# ==========================================
+# 阶段 1：在 Linux 环境下安装依赖 (获取 Linux 版 sqlite)
+# ==========================================
 FROM base AS deps
-
-RUN apk add --no-cache libc6-compat
-
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
+# 复制 package 文件
+COPY package.json yarn.lock* package-lock.json* ./
+# 使用淘宝镜像加速安装
+RUN npm config set registry 'https://registry.npmmirror.com/'
+RUN npm install
 
-COPY package.json yarn.lock ./
-
-RUN yarn config set registry 'https://registry.npmmirror.com/'
-RUN yarn install
-
+# ==========================================
+# 阶段 2：在 Linux 环境下执行代码打包
+# ==========================================
 FROM base AS builder
-
-RUN apk update && apk add --no-cache git
-
-ENV OPENAI_API_KEY=""
-ENV GOOGLE_API_KEY=""
-ENV CODE=""
-
 WORKDIR /app
+# 把上一阶段装好的 linux 版依赖复制过来
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# 禁用遥测并打包
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN npm run build
 
-RUN yarn build
-
+# ==========================================
+# 阶段 3：最终运行环境 (轻量级)
+# ==========================================
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add proxychains-ng
+# 安装你需要的代理工具
+RUN apk add --no-cache proxychains-ng
 
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# 这里可以留空，运行时通过 docker run -e 传参
 ENV PROXY_URL=""
 ENV OPENAI_API_KEY=""
 ENV GOOGLE_API_KEY=""
 ENV CODE=""
-ENV ENABLE_MCP=""
 
+# 复制刚才在 Linux 环境下编译好的产物
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/.next/server ./.next/server
-
-RUN mkdir -p /app/app/mcp && chmod 777 /app/app/mcp
-COPY --from=builder /app/app/mcp/mcp_config.default.json /app/app/mcp/mcp_config.json
 
 EXPOSE 3000
 
+# 完美保留你的原生启动脚本
 CMD if [ -n "$PROXY_URL" ]; then \
     export HOSTNAME="0.0.0.0"; \
     protocol=$(echo $PROXY_URL | cut -d: -f1); \
