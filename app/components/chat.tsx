@@ -99,7 +99,7 @@ import {
   UNFINISHED_INPUT,
 } from "../constant";
 import { Avatar } from "./emoji";
-import { ContextPrompts, MaskAvatar, MaskConfig } from "./mask";
+import { ContextPrompts, MaskConfig } from "./mask";
 import { useMaskStore } from "../store/mask";
 import { ChatCommandPrefix, useChatCommand, useCommand } from "../command";
 import { prettyObject } from "../utils/format";
@@ -551,6 +551,7 @@ export function ChatActions(props: {
   const [showSizeSelector, setShowSizeSelector] = useState(false);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
   const [showStyleSelector, setShowStyleSelector] = useState(false);
+  const [dynamicMaxK, setDynamicMaxK] = useState(8);
   const modelSizes = getModelSizes(currentModel);
   const dalle3Qualitys: DalleQuality[] = ["standard", "hd"];
   const dalle3Styles: DalleStyle[] = ["vivid", "natural"];
@@ -560,6 +561,22 @@ export function ChatActions(props: {
   const currentStyle = session.mask.modelConfig?.style ?? "vivid";
 
   const isMobileScreen = useMobileScreen();
+
+  // 从后端获取真实的模型状态
+  useEffect(() => {
+    fetch("/api/model/current", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.config) {
+          // 改良版的正则，更具兼容性，处理 .yaml 后缀
+          const match = data.config.match(/(\d+)[kK](?:\.yaml)?$/i);
+          if (match) {
+            setDynamicMaxK(parseInt(match[1], 10));
+          }
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const show = isVisionModel(currentModel);
@@ -671,11 +688,19 @@ export function ChatActions(props: {
             onSelection={(s) => {
               if (s.length === 0) return;
               const [model, providerName] = getModelProvider(s[0]);
+              // 更新当前会话的模型配置
               chatStore.updateTargetSession(session, (session) => {
                 session.mask.modelConfig.model = model as ModelType;
                 session.mask.modelConfig.providerName =
                   providerName as ServiceProvider;
                 session.mask.syncGlobalConfig = false;
+              });
+              // 更新全局模型配置，这样新会话也会使用这个模型
+              const config = useAppConfig.getState();
+              config.update((config) => {
+                config.modelConfig.model = model as ModelType;
+                config.modelConfig.providerName =
+                  providerName as ServiceProvider;
               });
               if (providerName == "ByteDance") {
                 const selectedModel = models.find(
@@ -797,11 +822,8 @@ export function ChatActions(props: {
             }}
           >
             {(() => {
-              const currentModelName = session.mask.modelConfig.model || "";
-              const match = currentModelName.match(/-(\d+)K$/i);
-              const maxK = match ? parseInt(match[1], 10) : 8;
               const availableKs = [1, 2, 4, 8, 16, 32, 64, 128, 256].filter(
-                (k) => k <= maxK,
+                (k) => k <= dynamicMaxK,
               );
               return availableKs.map((k) => (
                 <option key={k} value={k * 1000}>
@@ -974,32 +996,7 @@ function _Chat() {
   const fontFamily = config.fontFamily;
 
   const [showExport, setShowExport] = useState(false);
-  const [modelName, setModelName] = useState<string>("");
-
-  // Fetch model name from metrics endpoint
-  useEffect(() => {
-    const fetchModelName = async () => {
-      try {
-        const response = await fetch("http://192.168.1.93:30000/metrics");
-        if (response.ok) {
-          const data = await response.text();
-          const modelMatch = data.match(
-            /model_name="\/mnt\/intel-ssd\/models\/([^"]+)"/,
-          );
-          if (modelMatch && modelMatch[1]) {
-            setModelName(modelMatch[1]);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching model name:", error);
-      }
-    };
-
-    fetchModelName();
-    // Fetch model name every 30 seconds
-    const interval = setInterval(fetchModelName, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const [globalModelName, setGlobalModelName] = useState<string>("");
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [userInput, setUserInput] = useState("");
@@ -1071,6 +1068,21 @@ function _Chat() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(measure, [userInput]);
 
+  // 从后端获取真实的模型状态
+  useEffect(() => {
+    fetch("/api/model/current", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.config) {
+          // 提取全局模型名称
+          if (data.config !== "none") {
+            setGlobalModelName(data.config.replace(".yaml", ""));
+          }
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   // chat commands shortcuts
   const chatCommands = useChatCommand({
     new: () => chatStore.newSession(),
@@ -1117,7 +1129,7 @@ function _Chat() {
     }
     setIsLoading(true);
     chatStore
-      .onUserInput(userInput, attachImages)
+      .onUserInput(userInput, attachImages, false, globalModelName)
       .then(() => setIsLoading(false));
     setAttachImages([]);
     chatStore.setLastInput(userInput);
@@ -1270,7 +1282,9 @@ function _Chat() {
     setIsLoading(true);
     const textContent = getMessageTextContent(userMessage);
     const images = getMessageImages(userMessage);
-    chatStore.onUserInput(textContent, images).then(() => setIsLoading(false));
+    chatStore
+      .onUserInput(textContent, images, false, globalModelName)
+      .then(() => setIsLoading(false));
     inputRef.current?.focus();
   };
 
@@ -1888,17 +1902,14 @@ function _Chat() {
                                       <Avatar avatar="2699-fe0f" />
                                     ) : (
                                       <>
-                                        <MaskAvatar
-                                          avatar={session.mask.avatar}
-                                          model={
-                                            message.model ||
-                                            session.mask.modelConfig.model
-                                          }
-                                        />
-                                        <div className="flex items-center ml-2 px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[10px] font-mono">
-                                          {message.model ||
-                                            session.mask.modelConfig.model}
+                                        <div className="user-avatar flex items-center justify-center text-2xl bg-gray-100 rounded-md w-8 h-8">
+                                          🤖
                                         </div>
+                                        {!["system"].includes(message.role) && (
+                                          <div className="flex items-center ml-2 px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[10px] font-mono">
+                                            {message.model || globalModelName}
+                                          </div>
+                                        )}
                                       </>
                                     )}
                                   </>

@@ -12,7 +12,10 @@ export const RUNTIME_CONFIG_DOM = "danger-runtime-config";
 
 export const STABILITY_BASE_URL = "https://api.stability.ai";
 
-export const OPENAI_BASE_URL = "http://192.168.1.93:30000/";
+export const OPENAI_BASE_URL =
+  process.env.NEXT_PUBLIC_OPENAI_BASE_URL ||
+  process.env.BASE_URL ||
+  "http://192.168.1.93:30000";
 export const ANTHROPIC_BASE_URL = "https://api.anthropic.com";
 
 export const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/";
@@ -64,6 +67,7 @@ export enum Path {
   McpMarket = "/mcp-market",
   UserManagement = "/user-management",
   Openclaw = "/openclaw",
+  Benchmark = "/benchmark",
 }
 
 export enum ApiPath {

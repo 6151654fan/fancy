@@ -13,6 +13,8 @@ export function CombinedStatusPage() {
   const [switchTimeout, setSwitchTimeout] = useState<NodeJS.Timeout | null>(
     null,
   );
+  const [serviceOutput, setServiceOutput] = useState<string>("");
+  const [isServiceLoading, setIsServiceLoading] = useState<boolean>(false);
 
   // 模型切换函数
   const handleSwitchModel = (modelConfig: string) => {
@@ -35,7 +37,7 @@ export function CombinedStatusPage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ modelConfig: `${modelConfig}.yaml` }),
+      body: JSON.stringify({ modelConfig: modelConfig }),
     }).catch(console.error);
 
     // 延迟 30 秒后再开始轮询，避开“旧模型”的临死挣扎期
@@ -84,6 +86,47 @@ export function CombinedStatusPage() {
     setSwitchTimeout(delayTimeout);
   };
 
+  // 服务控制函数
+  const handleServiceControl = async (action: string) => {
+    setIsServiceLoading(true);
+    setServiceOutput("");
+
+    try {
+      const response = await fetch("/api/service-control", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (response.status === 429) {
+        setServiceOutput("操作过于频繁，请一小时后再试\n");
+        setIsServiceLoading(false);
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        setServiceOutput("无法获取响应流\n");
+        setIsServiceLoading(false);
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const text = decoder.decode(value);
+        setServiceOutput((prev) => prev + text);
+      }
+    } catch (error) {
+      setServiceOutput(`Error: ${(error as Error).message}\n`);
+    } finally {
+      setIsServiceLoading(false);
+    }
+  };
+
   // 清理函数
   useEffect(() => {
     return () => {
@@ -110,14 +153,20 @@ export function CombinedStatusPage() {
           ),
         ]);
 
-        if (currentData?.currentModel) {
-          setCurrentModel(currentData.currentModel);
+        // 处理当前模型数据
+        if (currentData) {
+          if (currentData.config && currentData.config !== "none") {
+            // 存储不带 .yaml 后缀的模型名用于显示
+            setCurrentModel(currentData.config.replace(".yaml", ""));
+          } else {
+            // 处理 config 为 none 的情况
+            setCurrentModel("");
+          }
         }
+        // 处理可用模型列表
         if (listData?.models?.length > 0) {
-          const cleanedModels = listData.models.map((m: string) =>
-            m.replace(".yaml", ""),
-          );
-          setAvailableModels(cleanedModels);
+          // 存储完整的模型名（带 .yaml 后缀）用于调用 API
+          setAvailableModels(listData.models);
         }
       } catch (e) {
         console.error("Failed to fetch model data", e);
@@ -242,75 +291,190 @@ export function CombinedStatusPage() {
               正在加载可用模型列表...
             </div>
           ) : (
-            availableModels.map((config) => (
-              <button
-                key={config}
-                onClick={() => {
-                  const modelName = config.replace(".yaml", "");
-                  const confirmed = window.confirm(
-                    `确定要切换到模型 ${modelName} 吗？\n\n警告：切换模型将导致当前服务重启，加载过程可能需要数分钟，请确认！`,
-                  );
-                  if (confirmed) {
-                    handleSwitchModel(config);
-                  }
-                }}
-                disabled={isSwitching || currentModel === config}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  backgroundColor:
-                    currentModel === config ? "#3b82f6" : "#ffffff",
-                  color: currentModel === config ? "#ffffff" : "#1f2937",
-                  border: `1px solid ${
-                    currentModel === config ? "#3b82f6" : "#e2e8f0"
-                  }`,
-                  cursor:
-                    isSwitching || currentModel === config
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity: isSwitching ? 0.6 : 1,
-                  transition: "all 0.2s ease",
-                }}
-              >
-                {config.replace(".yaml", "")}
-              </button>
-            ))
+            availableModels.map((config) => {
+              const displayName = config.replace(".yaml", "");
+              return (
+                <button
+                  key={config}
+                  onClick={() => {
+                    const confirmed = window.confirm(
+                      `确定要切换到模型 ${displayName} 吗？\n\n警告：切换模型将导致当前服务重启，加载过程可能需要数分钟，请确认！`,
+                    );
+                    if (confirmed) {
+                      handleSwitchModel(config);
+                    }
+                  }}
+                  disabled={isSwitching || currentModel === displayName}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    backgroundColor:
+                      currentModel === displayName ? "#3b82f6" : "#ffffff",
+                    color: currentModel === displayName ? "#ffffff" : "#1f2937",
+                    border: `1px solid ${
+                      currentModel === displayName ? "#3b82f6" : "#e2e8f0"
+                    }`,
+                    cursor:
+                      isSwitching || currentModel === displayName
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity: isSwitching ? 0.6 : 1,
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {displayName}
+                </button>
+              );
+            })
           )}
         </div>
 
-        {currentModel && (
-          <div
+        {/* 当前模型信息区块 */}
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "16px",
+            backgroundColor: "#ffffff",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <p
             style={{
-              marginTop: "20px",
-              padding: "16px",
-              backgroundColor: "#ffffff",
-              borderRadius: "12px",
-              border: "1px solid #e2e8f0",
+              fontSize: "14px",
+              color: "#64748b",
+              margin: "0 0 8px 0",
             }}
           >
-            <p
+            当前模型
+          </p>
+          <p
+            style={{
+              fontSize: "16px",
+              fontWeight: "700",
+              color: "#0f172a",
+              margin: 0,
+            }}
+          >
+            {currentModel || "暂无运行中的模型"}
+          </p>
+        </div>
+
+        {/* 服务控制区块 */}
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "16px",
+            backgroundColor: "#ffffff",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "14px",
+              color: "#64748b",
+              margin: "0 0 12px 0",
+            }}
+          >
+            Docker 服务控制
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap",
+              marginBottom: "12px",
+            }}
+          >
+            <button
+              onClick={() => handleServiceControl("start")}
+              disabled={isServiceLoading}
               style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
                 fontSize: "14px",
-                color: "#64748b",
-                margin: "0 0 8px 0",
+                fontWeight: "600",
+                backgroundColor: "#10b981",
+                color: "#ffffff",
+                border: "none",
+                cursor: isServiceLoading ? "not-allowed" : "pointer",
+                opacity: isServiceLoading ? 0.6 : 1,
               }}
             >
-              当前模型
-            </p>
-            <p
+              启动服务
+            </button>
+            <button
+              onClick={() => handleServiceControl("stop")}
+              disabled={isServiceLoading}
               style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#0f172a",
-                margin: 0,
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: "600",
+                backgroundColor: "#ef4444",
+                color: "#ffffff",
+                border: "none",
+                cursor: isServiceLoading ? "not-allowed" : "pointer",
+                opacity: isServiceLoading ? 0.6 : 1,
               }}
             >
-              {currentModel}
-            </p>
+              停止服务
+            </button>
+            <button
+              onClick={() => handleServiceControl("restart")}
+              disabled={isServiceLoading}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: "600",
+                backgroundColor: "#f59e0b",
+                color: "#ffffff",
+                border: "none",
+                cursor: isServiceLoading ? "not-allowed" : "pointer",
+                opacity: isServiceLoading ? 0.6 : 1,
+              }}
+            >
+              重启服务
+            </button>
+            <button
+              onClick={() => handleServiceControl("status")}
+              disabled={isServiceLoading}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: "600",
+                backgroundColor: "#6366f1",
+                color: "#ffffff",
+                border: "none",
+                cursor: isServiceLoading ? "not-allowed" : "pointer",
+                opacity: isServiceLoading ? 0.6 : 1,
+              }}
+            >
+              查看状态
+            </button>
           </div>
-        )}
+          <pre
+            style={{
+              backgroundColor: "#000000",
+              color: "#4ade80",
+              fontFamily: "'Courier New', Courier, monospace",
+              padding: "16px",
+              borderRadius: "8px",
+              overflowY: "auto",
+              height: "256px",
+              margin: 0,
+              fontSize: "13px",
+              lineHeight: "1.5",
+            }}
+          >
+            {serviceOutput || "等待操作..."}
+          </pre>
+        </div>
       </div>
     </div>
   );

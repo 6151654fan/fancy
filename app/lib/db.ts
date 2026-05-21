@@ -1,12 +1,20 @@
 import SQLite from "better-sqlite3";
-import { join } from "path";
+import path from "path";
 import { existsSync, mkdirSync, unlinkSync } from "fs";
+import { join } from "path";
 
 // ==========================================
-// 1. 初始化目录
+// 1. 统一数据目录配置
 // ==========================================
-// 确保 chats 目录存在
-const chatsDir = join(process.cwd(), "chats");
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
+
+// 确保基础数据目录存在
+if (!existsSync(DATA_DIR)) {
+  mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// 确保 chats 子目录存在
+const chatsDir = path.join(DATA_DIR, "chats");
 if (!existsSync(chatsDir)) {
   mkdirSync(chatsDir, { recursive: true });
 }
@@ -39,6 +47,7 @@ function initUserDatabase(db: any) {
       role TEXT NOT NULL,
       content TEXT NOT NULL,
       date INTEGER NOT NULL,
+      model TEXT,
       FOREIGN KEY (sessionId) REFERENCES sessions (id)
     );
   `);
@@ -60,7 +69,7 @@ export function getUserDb(username: string): any {
     return dbPool[username];
   }
 
-  const dbPath = join(chatsDir, `${username}.db`);
+  const dbPath = path.join(chatsDir, `${username}.db`);
   // 实例化数据库连接
   const db = new SQLite(dbPath);
 
@@ -105,7 +114,7 @@ export function deleteUserDb(username: string) {
 // ==========================================
 // 3. 主数据库管理 (用户账号体系)
 // ==========================================
-const mainDbPath = join(process.cwd(), "users.db");
+const mainDbPath = path.join(DATA_DIR, "users.db");
 // 使用 any 类型彻底绕过 TS 类型检查
 const mainDb: any = new SQLite(mainDbPath);
 

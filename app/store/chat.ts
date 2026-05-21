@@ -344,6 +344,14 @@ export const useChatStore = createPersistStore(
             },
           };
           session.topic = mask.name;
+        } else {
+          // 如果没有提供 mask，使用当前会话的模型配置
+          const currentSession = get().currentSession();
+          if (currentSession) {
+            session.mask.modelConfig = {
+              ...currentSession.mask.modelConfig,
+            };
+          }
         }
 
         set((state) => ({
@@ -472,6 +480,7 @@ export const useChatStore = createPersistStore(
         content: string,
         attachImages?: string[],
         isMcpResponse?: boolean,
+        globalModelName?: string,
       ) {
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;
@@ -500,7 +509,7 @@ export const useChatStore = createPersistStore(
         const botMessage: ChatMessage = createMessage({
           role: "assistant",
           streaming: true,
-          model: modelConfig.model,
+          model: globalModelName || modelConfig.model,
         });
 
         // get recent messages
@@ -1053,6 +1062,7 @@ export const useChatStore = createPersistStore(
                 role: message.role,
                 content: message.content,
                 date: message.date,
+                model: message.model,
               },
             }),
           });
@@ -1086,10 +1096,12 @@ export const useChatStore = createPersistStore(
                     typeof result === "object"
                       ? JSON.stringify(result)
                       : String(result);
+                  const currentSession = get().currentSession();
                   get().onUserInput(
                     `\`\`\`json:mcp-response:${mcpRequest.clientId}\n${mcpResponse}\n\`\`\``,
                     [],
                     true,
+                    currentSession?.mask.modelConfig.model,
                   );
                 })
                 .catch((error) => showToast("MCP execution failed", error));

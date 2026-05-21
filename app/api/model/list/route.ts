@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   try {
     const { stdout } = await execAsync(
-      "bash /home/ljb/scripts/sglang/switch_model_user.sh --list-json",
+      "bash /home/ljb/scripts/sglang/docker_switch.sh --list-json",
     );
 
     // 解析脚本返回的 JSON 数据

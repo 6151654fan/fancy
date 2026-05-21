@@ -12,6 +12,7 @@ import { CombinedStatusPage } from "./combined-status";
 import { GrafanaPage } from "./grafana";
 import { UserManagementPage } from "./user-management";
 import { OpenclawPage } from "./openclaw";
+import { Benchmark } from "./benchmark";
 
 //import { MonitorPage } from "./monitor";
 
@@ -356,6 +357,7 @@ function Screen() {
               element={<UserManagementPage />}
             />
             <Route path={Path.Openclaw} element={<OpenclawPage />} />
+            <Route path={Path.Benchmark} element={<Benchmark />} />
           </Routes>
         </WindowContent>
       </>

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         const messages = userDb
           .prepare(
             `
-        SELECT messageId, role, content, date 
+        SELECT messageId, role, content, date, model 
         FROM messages 
         WHERE sessionId = ? 
         ORDER BY date ASC
@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
             role: msg.role,
             content: msg.content,
             date: msg.date,
+            model: msg.model,
           })),
         };
       }),
@@ -121,8 +122,8 @@ export async function POST(request: NextRequest) {
       userDb
         .prepare(
           `
-        INSERT OR REPLACE INTO messages (sessionId, messageId, role, content, date) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO messages (sessionId, messageId, role, content, date, model) 
+        VALUES (?, ?, ?, ?, ?, ?)
       `,
         )
         .run(
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
           message.role,
           JSON.stringify(message.content),
           message.date,
+          message.model,
         );
     });
 

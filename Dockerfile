@@ -31,7 +31,7 @@ FROM base AS runner
 WORKDIR /app
 
 # 安装你需要的代理工具
-RUN apk add --no-cache proxychains-ng
+RUN apk add --no-cache proxychains-ng docker-cli bash python3
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1

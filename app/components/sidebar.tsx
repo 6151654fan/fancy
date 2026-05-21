@@ -237,6 +237,13 @@ const MENU_ITEMS: MenuItem[] = [
     path: Path.Dashboard,
     adminOnly: true,
   },
+  {
+    id: "benchmark",
+    icon: <SettingsIcon />,
+    label: "基准测试",
+    path: "/benchmark",
+    adminOnly: true,
+  },
 ];
 
 // 菜单项组件

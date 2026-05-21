@@ -1,38 +1,30 @@
 version: "3.9"
-services:
-  chatgpt-next-web:
-    profiles: [ "no-proxy" ]
-    container_name: chatgpt-next-web
-    image: yidadaa/chatgpt-next-web
-    ports:
-      - 3000:3000
-    environment:
-      - OPENAI_API_KEY=$OPENAI_API_KEY
-      - GOOGLE_API_KEY=$GOOGLE_API_KEY
-      - CODE=$CODE
-      - BASE_URL=$BASE_URL
-      - OPENAI_ORG_ID=$OPENAI_ORG_ID
-      - HIDE_USER_API_KEY=$HIDE_USER_API_KEY
-      - DISABLE_GPT4=$DISABLE_GPT4
-      - ENABLE_BALANCE_QUERY=$ENABLE_BALANCE_QUERY
-      - DISABLE_FAST_LINK=$DISABLE_FAST_LINK
-      - OPENAI_SB=$OPENAI_SB
 
-  chatgpt-next-web-proxy:
-    profiles: [ "proxy" ]
-    container_name: chatgpt-next-web-proxy
-    image: yidadaa/chatgpt-next-web
+services:
+  nextchat-custom:
+    container_name: jt-web-kt
+    build: . 
     ports:
-      - 3000:3000
+      - "3000:3000"
     environment:
       - OPENAI_API_KEY=$OPENAI_API_KEY
-      - GOOGLE_API_KEY=$GOOGLE_API_KEY
       - CODE=$CODE
-      - PROXY_URL=$PROXY_URL
       - BASE_URL=$BASE_URL
-      - OPENAI_ORG_ID=$OPENAI_ORG_ID
-      - HIDE_USER_API_KEY=$HIDE_USER_API_KEY
-      - DISABLE_GPT4=$DISABLE_GPT4
-      - ENABLE_BALANCE_QUERY=$ENABLE_BALANCE_QUERY
-      - DISABLE_FAST_LINK=$DISABLE_FAST_LINK
-      - OPENAI_SB=$OPENAI_SB
+      - DATA_DIR=/app/data
+      - NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL 
+    
+    volumes:
+      # 原本的数据固化
+      - nextchat_db_data:/app/data
+      
+      # 🌟 核心新增 1：挂载 Docker Socket，让容器有权限执行 docker 命令
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+      # 🌟 核心新增 2：把宿主机的脚本目录原封不动挂载进容器
+      # 这样前端代码里写的绝对路径 `/home/ljb/scripts/sglang/docker_switch.sh` 就能直接命中！
+      - /home/ljb/scripts/sglang:/home/ljb/scripts/sglang
+      
+    restart: always
+
+volumes:
+  nextchat_db_data:

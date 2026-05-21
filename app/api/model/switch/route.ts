@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     // 执行模型切换脚本
-    const command = `bash /home/ljb/scripts/sglang/switch_model_user.sh ${modelConfig}`;
+    const command = `bash /home/ljb/scripts/sglang/docker_switch.sh ${modelConfig}`;
 
     // 使用Promise包装exec调用
     const execPromise = new Promise<{ success: boolean; error?: string }>(
