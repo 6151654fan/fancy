@@ -39,7 +39,7 @@ import {
 } from "react-router-dom";
 import { SideBar } from "./sidebar";
 import { useAppConfig } from "../store/config";
-import { AuthPage } from "./auth";
+
 import { getClientConfig } from "../config/client";
 import { type ClientApi, getClientApi } from "../client/api";
 import { useAccessStore } from "../store";
@@ -190,26 +190,16 @@ function Screen() {
     loadAsyncGoogleFont();
   }, []);
 
-  // 检查用户是否已登录
+  // 检查用户是否已登录 - 已绕过鉴权，直接渲染主界面
   useEffect(() => {
-    // 不需要登录的页面
-    const noAuthPages = [Path.Auth, "/artifacts"];
-    const isNoAuthPage = noAuthPages.some((page) =>
-      location.pathname.includes(page),
-    );
-
-    if (!isNoAuthPage) {
-      const userSession = localStorage.getItem("userSession");
-      if (!userSession) {
-        // 未登录，重定向到登录页面
-        navigate(Path.Auth);
-      } else {
-        // 已登录，更新accessStore中的用户会话
-        const parsedSession = JSON.parse(userSession);
-        useAccessStore.getState().login(parsedSession);
-      }
-    }
-  }, [location.pathname, navigate]);
+    // 强制跳过登录检查，直接设置一个模拟的用户会话
+    const mockSession = {
+      user: { username: "测试用户", role: "user" },
+      token: "mock-token",
+    };
+    localStorage.setItem("userSession", JSON.stringify(mockSession));
+    useAccessStore.getState().login(mockSession);
+  }, []);
 
   if (isArtifact) {
     return (
@@ -321,7 +311,8 @@ function Screen() {
   // };
 
   const renderContent = () => {
-    if (isAuth) return <AuthPage />;
+    // 永久跳过登录页面，直接渲染主界面
+    if (isAuth) navigate(Path.Home);
     return (
       <>
         {!isSd && !isSdNew && (

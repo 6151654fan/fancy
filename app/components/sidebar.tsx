@@ -1,17 +1,13 @@
-import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { Fragment, useEffect, useMemo } from "react";
 
 import styles from "./home.module.scss";
 
 import { IconButton } from "./button";
-import SettingsIcon from "../icons/settings.svg";
 import AddIcon from "../icons/add.svg";
 import ArrowIcon from "../icons/arrow.svg";
 import BotIcon from "../icons/bot.svg";
-import UserIcon from "../icons/user.svg";
-import LogoutIcon from "../icons/logout.svg";
 
-import { useAppConfig, useChatStore, useAccessStore } from "../store";
+import { useAppConfig, useChatStore } from "../store";
 
 import { DEFAULT_SIDEBAR_WIDTH, Path } from "../constant";
 
@@ -19,15 +15,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { isIOS, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
-
-const DEFAULT_OPENCLAW_URL = "http://localhost:18789/openclaw/";
-
-function normalizeOpenclawUrl(url: string) {
-  const trimmed = url.trim();
-  if (!trimmed) return DEFAULT_OPENCLAW_URL;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `http://${trimmed}`;
-}
 
 const ChatList = dynamic(async () => (await import("./chat-list")).ChatList, {
   loading: () => null,
@@ -219,134 +206,12 @@ export function SideBarBody(props: {
   );
 }
 
-// 菜单项配置
-interface MenuItem {
-  id: string;
-  icon: React.ReactNode;
-  label: string;
-  path?: string;
-  adminOnly?: boolean;
-}
-
-// 主导航菜单
-const MENU_ITEMS: MenuItem[] = [
-  {
-    id: "model-monitor",
-    icon: <SettingsIcon />,
-    label: "切换模型",
-    path: Path.Dashboard,
-    adminOnly: true,
-  },
-  {
-    id: "benchmark",
-    icon: <SettingsIcon />,
-    label: "基准测试",
-    path: "/benchmark",
-    adminOnly: true,
-  },
-];
-
-// 菜单项组件
-function MenuItemComponent({
-  item,
-  isActive,
-  onClick,
-  isCollapsed,
-}: {
-  item: MenuItem;
-  isActive: boolean;
-  onClick: () => void;
-  isCollapsed?: boolean;
-}) {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
-  return (
-    <div
-      className={clsx(styles["sidebar-menu-item"], {
-        [styles["active"]]: isActive,
-      })}
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      role="menuitem"
-      tabIndex={0}
-      aria-label={item.label}
-      aria-current={isActive ? "page" : undefined}
-      title={isCollapsed ? item.label : undefined}
-      style={
-        isCollapsed
-          ? {
-              justifyContent: "center",
-              paddingLeft: 0,
-              paddingRight: 0,
-            }
-          : undefined
-      }
-    >
-      <span className={styles["sidebar-menu-item-icon"]}>{item.icon}</span>
-      {!isCollapsed && (
-        <span className={styles["sidebar-menu-item-label"]}>{item.label}</span>
-      )}
-    </div>
-  );
-}
-
 export function SideBar(props: { className?: string }) {
   useHotKey();
   const { isCollapsed, closeSidebar, toggleSidebar } = useSideBarToggle();
   const navigate = useNavigate();
   const location = useLocation();
   const chatStore = useChatStore();
-  const accessStore = useAccessStore();
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
-  const userSectionRef = useRef<HTMLDivElement>(null);
-  const isAdmin = accessStore.isAdmin();
-
-  // 计算菜单位置
-  useEffect(() => {
-    if (showUserMenu && userSectionRef.current) {
-      const rect = userSectionRef.current.getBoundingClientRect();
-      if (isCollapsed) {
-        // 收起状态：菜单左侧对齐侧边栏左边缘，避免溢出屏幕
-        const sidebarWidth = 72;
-        const menuWidth = 140;
-        setMenuStyle({
-          position: "fixed",
-          bottom: window.innerHeight - rect.top + 8,
-          left: Math.max(8, (sidebarWidth - menuWidth) / 2),
-          width: "max-content",
-          minWidth: "140px",
-        });
-      } else {
-        // 展开状态：菜单左对齐显示在用户区域上方
-        setMenuStyle({
-          position: "fixed",
-          bottom: window.innerHeight - rect.top + 8,
-          left: rect.left,
-          width: rect.width,
-        });
-      }
-    }
-  }, [showUserMenu, isCollapsed]);
-
-  const isCurrentRoute = (item: MenuItem) => {
-    if (!item.path) return false;
-    return (
-      location.pathname === item.path ||
-      location.pathname.startsWith(item.path + "/")
-    );
-  };
-
-  const handleMenuItemClick = (item: MenuItem) => {
-    if (item.path) {
-      navigate(item.path);
-    }
-  };
 
   return (
     <SideBarContainer
@@ -412,8 +277,8 @@ export function SideBar(props: { className?: string }) {
             />
           </div>
 
-          {/* 主导航菜单 */}
-          <div className={styles["sidebar-nav-section"]}>
+          {/* 主导航菜单 - 已注释，简化为纯聊天界面 */}
+          {/* <div className={styles["sidebar-nav-section"]}>
             {MENU_ITEMS.filter((item) => !item.adminOnly || isAdmin).map(
               (item) => (
                 <MenuItemComponent
@@ -425,7 +290,7 @@ export function SideBar(props: { className?: string }) {
                 />
               ),
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* 容器 B (滚动区)：仅包含 ChatList */}
@@ -439,143 +304,6 @@ export function SideBar(props: { className?: string }) {
               <ChatList narrow={isCollapsed} />
             </SideBarBody>
           )}
-        </div>
-
-        {/* 底部用户区域 */}
-        <div className={styles["sidebar-footer"]} ref={userSectionRef}>
-          <div className={styles["sidebar-user-section"]}>
-            <div
-              className={styles["sidebar-user-info"]}
-              style={
-                isCollapsed
-                  ? {
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      paddingLeft: 0,
-                      width: "100%",
-                      gap: "2px",
-                    }
-                  : {}
-              }
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              tabIndex={0}
-              role="button"
-              aria-expanded={showUserMenu}
-              aria-haspopup="menu"
-            >
-              {isCollapsed ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                    }}
-                  >
-                    {accessStore.userSession?.user?.username?.slice(0, 2) ||
-                      "用户"}
-                  </div>
-                  {accessStore.userSession?.user?.role === "admin" && (
-                    <div
-                      style={{
-                        fontSize: "10px",
-                        zoom: 0.8,
-                        textAlign: "center",
-                        opacity: 0.8,
-                        color: "#3b82f6",
-                      }}
-                    >
-                      管理员
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className={styles["sidebar-user-avatar"]}>
-                    <BotIcon />
-                  </div>
-                  <div className={styles["sidebar-user-text"]}>
-                    <div className={styles["sidebar-user-name"]}>
-                      {accessStore.userSession?.user?.username || "未登录"}
-                    </div>
-                    {accessStore.userSession?.user?.role === "admin" && (
-                      <div className={styles["sidebar-user-role"]}>管理员</div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* 弹出的用户菜单 */}
-            {showUserMenu &&
-              createPortal(
-                <>
-                  <div
-                    className={styles["sidebar-user-mask"]}
-                    onClick={() => setShowUserMenu(false)}
-                  />
-                  <div
-                    className={clsx(styles["sidebar-user-menu"], {
-                      [styles["sidebar-user-menu-collapsed"]]: isCollapsed,
-                    })}
-                    style={menuStyle}
-                    role="menu"
-                  >
-                    <div
-                      className={styles["sidebar-user-menu-item"]}
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        navigate(Path.Settings);
-                      }}
-                      role="menuitem"
-                      tabIndex={0}
-                    >
-                      <SettingsIcon />
-                      <span>设置</span>
-                    </div>
-                    {isAdmin && (
-                      <div
-                        className={styles["sidebar-user-menu-item"]}
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          navigate(Path.UserManagement);
-                        }}
-                        role="menuitem"
-                        tabIndex={0}
-                      >
-                        <UserIcon />
-                        <span>用户管理</span>
-                      </div>
-                    )}
-                    <div className={styles["sidebar-menu-divider-line"]} />
-                    <div
-                      className={clsx(
-                        styles["sidebar-user-menu-item"],
-                        styles.danger,
-                      )}
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        accessStore.logout();
-                        navigate(Path.Auth);
-                      }}
-                      role="menuitem"
-                      tabIndex={0}
-                    >
-                      <LogoutIcon />
-                      <span>退出登录</span>
-                    </div>
-                  </div>
-                </>,
-                document.body,
-              )}
-          </div>
         </div>
       </div>
     </SideBarContainer>
