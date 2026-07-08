@@ -22,7 +22,6 @@ import {
 import CopyIcon from "../icons/copy.svg";
 import LoadingIcon from "../icons/three-dots.svg";
 import ChatGptIcon from "../icons/chatgpt.png";
-import ShareIcon from "../icons/share.svg";
 
 import DownloadIcon from "../icons/download.svg";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -524,7 +523,7 @@ export function ImagePreviewer(props: {
           </div>
 
           <div>
-            <div className={styles["main-title"]}>晶铁 普惠AI</div>
+            <div className={styles["main-title"]}>普惠AI</div>
             <div className={styles["sub-title"]}>
               https://www.ferrosemi.com/
             </div>

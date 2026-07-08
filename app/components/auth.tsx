@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Path } from "../constant";
 import { getClientConfig } from "../config/client";
 import { LoginRequest } from "../types/auth";
-import companyLogoPng from "../icons/brand/company-logo-white.png";
 import EyeIcon from "../icons/eye.svg";
 import EyeOffIcon from "../icons/eye-off.svg";
 
@@ -104,17 +103,7 @@ export function AuthPage() {
         <div className={styles["brand-panel"]}>
           <div className={styles["brand-overlay"]} aria-hidden="true" />
           <div className={styles["brand-content"]}>
-            <div className={styles["logo-wrapper"]}>
-              <img
-                src={
-                  typeof companyLogoPng === "string"
-                    ? companyLogoPng
-                    : companyLogoPng.src
-                }
-                alt="Company Logo"
-                className={styles["company-logo"]}
-              />
-            </div>
+            <div className={styles["logo-wrapper"]}></div>
 
             <div className={styles["brand-hero"]}>
               <p className={styles["brand-kicker"]}>ARCHITECT OF THE AI-ERA</p>
@@ -125,9 +114,6 @@ export function AuthPage() {
             </div>
 
             <div className={styles["brand-company"]}>
-              {/* <h2 className={styles["brand-company-name"]}>
-                晶铁半导体技术（广东）有限公司
-              </h2> */}
               <p>
                 <span className={styles["brand-company-label"]}>
                   联系地址：
@@ -170,9 +156,7 @@ export function AuthPage() {
           <div className={styles["form-container"]}>
             <div className={styles["form-heading-group"]}>
               <h2 className={styles["form-title"]}>您好</h2>
-              <p className={styles["form-subtitle"]}>
-                欢迎使用晶铁普惠AI一体机
-              </p>
+              <p className={styles["form-subtitle"]}>欢迎使用普惠AI一体机</p>
             </div>
 
             {error && (
@@ -370,7 +354,7 @@ export function AuthPage() {
             </form>
 
             <div className={styles["copyright"]}>
-              <p>© 2026 晶铁半导体</p>
+              <p>© 2026</p>
               <p>保留所有权利</p>
             </div>
           </div>

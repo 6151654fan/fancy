@@ -57,14 +57,7 @@ export function ProductHomePage() {
         {/* Hero */}
         <section style={styles.hero}>
           <div style={styles.heroContent}>
-            {/* Logo */}
-            <div style={styles.logoWrap}>
-              <img
-                src="/company-logo-white.png"
-                alt="FerroSemi"
-                style={styles.logo}
-              />
-            </div>
+            {/* Logo - removed */}
 
             {/* Badge */}
             <div style={styles.badge}>
@@ -73,7 +66,7 @@ export function ProductHomePage() {
             </div>
 
             {/* Title */}
-            <h1 style={styles.title}>晶铁普惠AI一体机</h1>
+            <h1 style={styles.title}>普惠AI一体机</h1>
 
             {/* Desc */}
             <p style={styles.desc}>

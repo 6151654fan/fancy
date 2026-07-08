@@ -733,14 +733,7 @@ $primary-light: #60a5fa;
 .sidebar-logo {
   display: inline-flex;
   
-  /* 强制设置背景图为你的 SVG */
-  background-image: url("/big-ferrosemi-blue.svg"); 
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-
-  /* 你需要手动指定一个宽度和高度，否则背景图显示不出来 */
-  width: 60px; 
+  width: 60px;
   height: 60px;
 
   /* 隐藏原本可能存在的 SVG 标签（如果有的话） */

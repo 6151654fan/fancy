@@ -15,11 +15,7 @@ export const metadata: Metadata = {
     title: "普惠 AI 一体机",
     statusBarStyle: "default",
   },
-  icons: {
-    // 假设你之前侧边栏用的图标叫 big-ferrosemi-blue.svg，并且放在了 public 目录下
-    icon: "/big-ferrosemi-blue.svg",
-    apple: "/big-ferrosemi-blue.svg", // 顺便把苹果手机保存到桌面的图标也给替换了
-  },
+  icons: {},
 };
 
 export const viewport: Viewport = {
